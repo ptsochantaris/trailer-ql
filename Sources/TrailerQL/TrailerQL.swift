@@ -28,7 +28,10 @@ public enum TQLError: Error {
     }
 }
 
+public var debugLog: ((String) -> Void)?
+
 func log(_ message: @autoclosure () -> String) {
-    // TODO
-    print(message())
+    if let debugLog {
+        debugLog(message())
+    }
 }
