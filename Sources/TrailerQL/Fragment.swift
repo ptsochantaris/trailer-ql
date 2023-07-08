@@ -56,9 +56,9 @@ public struct Fragment: Scanning, Hashable {
         self.elements = elements()
     }
     
-    public func addingField(_ field: Field) -> Fragment {
+    public func addingElement(_ element: Element) -> Fragment {
         var currentElements = elements
-        currentElements.append(field)
+        currentElements.append(element)
         return Fragment(cloning: self, elements: currentElements)
     }
     
