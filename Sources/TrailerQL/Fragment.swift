@@ -42,7 +42,7 @@ public struct Fragment: Scanning, Hashable {
         return res
     }
     
-    private init(cloning: Fragment, elements: [Element]) {
+    public init(cloning: Fragment, elements: [Element]) {
         id = cloning.id
         name = cloning.name
         type = cloning.type
