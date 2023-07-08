@@ -12,7 +12,7 @@ public typealias PerNodeBlock = @NodeActor (Node) async throws -> Void
 
 public let idField = Field("id")
 
-public let emptyList = LinkedList<Fragment>()
+public let emptyList = List<Fragment>()
 
 public enum TQLError: Error {
     case alreadyParsed

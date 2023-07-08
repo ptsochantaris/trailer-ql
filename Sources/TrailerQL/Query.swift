@@ -25,11 +25,11 @@ public struct Query {
         perNodeBlock = query.perNodeBlock
     }
     
-    public static func batching(_ name: String, idList: [String], perNode: PerNodeBlock? = nil, @ElementsBuilder fields: () -> [Element]) -> LinkedList<Query> {
+    public static func batching(_ name: String, idList: [String], perNode: PerNodeBlock? = nil, @ElementsBuilder fields: () -> [Element]) -> List<Query> {
         var list = ArraySlice(idList)
         let template = Group("items", fields: fields)
         let batchLimit = template.recommendedLimit
-        let queries = LinkedList<Query>()
+        let queries = List<Query>()
         
         while !list.isEmpty {
             let chunk = Array(list.prefix(batchLimit))
@@ -66,7 +66,7 @@ public struct Query {
         rootElement.nodeCost
     }
     
-    public func processResponse(from json: Any?) async throws -> LinkedList<Query> {
+    public func processResponse(from json: Any?) async throws -> List<Query> {
         guard
             let json = json as? [String: Any],
             let allData = json["data"] as? JSON,
@@ -74,7 +74,7 @@ public struct Query {
             let topData = data[rootElement.name]
         else {
             if allowsEmptyResponse {
-                return LinkedList()
+                return List()
             }
             let msg = "Could not read a `data` or `data.node` from payload"
             throw TQLError.apiError("\(logPrefix)" + msg)
@@ -82,7 +82,7 @@ public struct Query {
         
         log("\(logPrefix)Scanning result")
         
-        let extraQueries = LinkedList<Query>()
+        let extraQueries = List<Query>()
         try await rootElement.scan(query: self, pageData: topData, parent: parent, extraQueries: extraQueries)
         if extraQueries.count == 0 {
             log("\(logPrefix)Parsed all pages")

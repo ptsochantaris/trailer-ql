@@ -34,8 +34,8 @@ public struct Fragment: Scanning, Hashable {
         "fragment \(name) on \(type) { __typename " + elements.map(\.queryText).joined(separator: " ") + " }"
     }
     
-    public var fragments: LinkedList<Fragment> {
-        let res = LinkedList<Fragment>(value: self)
+    public var fragments: List<Fragment> {
+        let res = List<Fragment>(value: self)
         for element in elements {
             res.append(contentsOf: element.fragments)
         }
@@ -56,7 +56,7 @@ public struct Fragment: Scanning, Hashable {
         self.elements = elements()
     }
     
-    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: LinkedList<Query>) async throws {
+    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: List<Query>) async throws {
         // DLog("\(query.logPrefix)Scanning fragment \(name)")
         guard let hash = pageData as? JSON else { return }
         

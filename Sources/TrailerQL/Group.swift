@@ -66,7 +66,7 @@ public struct Group: Scanning {
     
     public var queryText: String {
         var query = name
-        let brackets = LinkedList<String>()
+        let brackets = List<String>()
         
         switch paging {
         case .none:
@@ -123,15 +123,15 @@ public struct Group: Scanning {
         return query
     }
     
-    public var fragments: LinkedList<Fragment> {
-        let res = LinkedList<Fragment>()
+    public var fragments: List<Fragment> {
+        let res = List<Fragment>()
         for field in fields {
             res.append(contentsOf: field.fragments)
         }
         return res
     }
     
-    private func scanNode(_ node: JSON, query: Query, parent: Node?, extraQueries: LinkedList<Query>) async throws {
+    private func scanNode(_ node: JSON, query: Query, parent: Node?, extraQueries: List<Query>) async throws {
         let thisObject: Node?
         
         if let o = Node(jsonPayload: node, parent: parent) {
@@ -161,7 +161,7 @@ public struct Group: Scanning {
         }
     }
     
-    private func scanPage(_ edges: [JSON], pageInfo: JSON?, query: Query, parent: Node?, extraQueries: LinkedList<Query>) async throws {
+    private func scanPage(_ edges: [JSON], pageInfo: JSON?, query: Query, parent: Node?, extraQueries: List<Query>) async throws {
         do {
             for node in edges.compactMap({ $0["node"] as? JSON }) {
                 try await scanNode(node, query: query, parent: parent, extraQueries: extraQueries)
@@ -186,7 +186,7 @@ public struct Group: Scanning {
         }
     }
     
-    private func scanList(nodes: [JSON], query: Query, parent: Node?, extraQueries: LinkedList<Query>) async throws {
+    private func scanList(nodes: [JSON], query: Query, parent: Node?, extraQueries: List<Query>) async throws {
         do {
             for node in nodes {
                 try await scanNode(node, query: query, parent: parent, extraQueries: extraQueries)
@@ -200,7 +200,7 @@ public struct Group: Scanning {
         }
     }
     
-    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: LinkedList<Query>) async throws {
+    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: List<Query>) async throws {
         if let hash = pageData as? JSON {
             if let edges = hash["edges"] as? [JSON] {
                 try await scanPage(edges, pageInfo: hash["pageInfo"] as? JSON, query: query, parent: parent, extraQueries: extraQueries)

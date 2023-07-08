@@ -1,6 +1,6 @@
 import Foundation
 
-public final class LinkedList<Value>: Sequence {
+public final class List<Value>: Sequence {
     final class Node<T> {
         fileprivate let value: T
         fileprivate var next: Node<T>?
@@ -51,7 +51,7 @@ public final class LinkedList<Value>: Sequence {
         tail = newNode
     }
 
-    public func append(contentsOf collection: LinkedList<Value>) {
+    public func append(contentsOf collection: List<Value>) {
         if collection.count == 0 {
             return
         }
@@ -143,7 +143,7 @@ public final class LinkedList<Value>: Sequence {
     }
 }
 
-extension LinkedList: Codable where Value: Codable {
+extension List: Codable where Value: Codable {
     public convenience init(from decoder: Decoder) throws {
         var container = try decoder.unkeyedContainer()
         self.init()
@@ -159,7 +159,7 @@ extension LinkedList: Codable where Value: Codable {
     }
 }
 
-public extension LinkedList where Value: AnyObject {
+public extension List where Value: AnyObject {
     @discardableResult
     func removeInstance(of item: Value) -> Bool {
         guard var prev = head else {

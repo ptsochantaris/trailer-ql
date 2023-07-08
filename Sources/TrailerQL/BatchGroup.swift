@@ -44,11 +44,11 @@ public struct BatchGroup: Scanning {
         "nodes(ids: [\"" + idList.joined(separator: "\",\"") + "\"]) { " + templateGroup.fields.map(\.queryText).joined(separator: " ") + " }"
     }
     
-    public var fragments: LinkedList<Fragment> {
+    public var fragments: List<Fragment> {
         templateGroup.fragments
     }
     
-    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: LinkedList<Query>) async throws {
+    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: List<Query>) async throws {
         guard let nodes = pageData as? any Sequence else { return }
         
         for pageData in nodes.compactMap({ $0 as? JSON }) {
