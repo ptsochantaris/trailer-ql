@@ -154,9 +154,9 @@ public struct Group: Scanning {
         let count = extraQueries.count
         if count > 0 {
             if let thisObject {
-                log("\(query.logPrefix)(\(thisObject.elementType + ":" + thisObject.id) in: \(name)) will need further paging: \(count) new queries")
+                TQL.log("\(query.logPrefix)(\(thisObject.elementType + ":" + thisObject.id) in: \(name)) will need further paging: \(count) new queries")
             } else {
-                log("\(query.logPrefix)(Node in: \(name)) will need further paging: \(count) new queries")
+                TQL.log("\(query.logPrefix)(Node in: \(name)) will need further paging: \(count) new queries")
             }
         }
     }
@@ -177,12 +177,12 @@ public struct Group: Scanning {
                 }
             }
             
-        } catch TQLError.alreadyParsed {
+        } catch TQL.Error.alreadyParsed {
             // exhausted new nodes
         }
         
         if extraQueries.count > 0 {
-            log("\(query.logPrefix)(Page in: \(name)) will need further paging: \(extraQueries.count) new queries")
+            TQL.log("\(query.logPrefix)(Page in: \(name)) will need further paging: \(extraQueries.count) new queries")
         }
     }
     
@@ -191,12 +191,12 @@ public struct Group: Scanning {
             for node in nodes {
                 try await scanNode(node, query: query, parent: parent, extraQueries: extraQueries)
             }
-        } catch TQLError.alreadyParsed {
+        } catch TQL.Error.alreadyParsed {
             // exhausted new nodes
         }
         
         if extraQueries.count > 0 {
-            log("\(query.logPrefix)(Group: \(name)) will need further paging: \(extraQueries.count) new queries")
+            TQL.log("\(query.logPrefix)(Group: \(name)) will need further paging: \(extraQueries.count) new queries")
         }
     }
     
@@ -207,7 +207,7 @@ public struct Group: Scanning {
             } else {
                 do {
                     try await scanNode(hash, query: query, parent: parent, extraQueries: extraQueries)
-                } catch TQLError.alreadyParsed {
+                } catch TQL.Error.alreadyParsed {
                     // not a new node, ignore
                 }
             }

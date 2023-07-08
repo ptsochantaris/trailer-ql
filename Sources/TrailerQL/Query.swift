@@ -1,6 +1,14 @@
 import Foundation
 
 public struct Query {
+    @globalActor
+    public enum NodeActor {
+        public actor ActorType {}
+        public static let shared = ActorType()
+    }
+    
+    public typealias PerNodeBlock = @NodeActor (Node) async throws -> Void
+
     public let name: String
     
     let rootElement: Scanning
@@ -77,17 +85,17 @@ public struct Query {
                 return List()
             }
             let msg = "Could not read a `data` or `data.node` from payload"
-            throw TQLError.apiError("\(logPrefix)" + msg)
+            throw TQL.Error.apiError("\(logPrefix)" + msg)
         }
         
-        log("\(logPrefix)Scanning result")
+        TQL.log("\(logPrefix)Scanning result")
         
         let extraQueries = List<Query>()
         try await rootElement.scan(query: self, pageData: topData, parent: parent, extraQueries: extraQueries)
         if extraQueries.count == 0 {
-            log("\(logPrefix)Parsed all pages")
+            TQL.log("\(logPrefix)Parsed all pages")
         } else {
-            log("\(logPrefix)Needs more page data (\(extraQueries.count) queries)")
+            TQL.log("\(logPrefix)Needs more page data (\(extraQueries.count) queries)")
         }
         return extraQueries
     }
