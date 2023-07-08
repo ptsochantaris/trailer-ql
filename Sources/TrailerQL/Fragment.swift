@@ -42,7 +42,7 @@ public struct Fragment: Scanning, Hashable {
         return res
     }
     
-    public init(cloning: Fragment, elements: [Element]) {
+    private init(cloning: Fragment, elements: [Element]) {
         id = cloning.id
         name = cloning.name
         type = cloning.type
@@ -54,6 +54,12 @@ public struct Fragment: Scanning, Hashable {
         name = type.lowercased() + "Fragment"
         self.type = type
         self.elements = elements()
+    }
+    
+    public func addingField(_ field: Field) -> Fragment {
+        var currentElements = elements
+        currentElements.append(field)
+        return Fragment(cloning: self, elements: currentElements)
     }
     
     public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: List<Query>) async throws {
