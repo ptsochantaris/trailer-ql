@@ -1,4 +1,5 @@
 import Foundation
+import Lista
 
 public struct Fragment: Scanning, Hashable {
     public let id: UUID
@@ -34,8 +35,8 @@ public struct Fragment: Scanning, Hashable {
         "fragment \(name) on \(type) { __typename " + elements.map(\.queryText).joined(separator: " ") + " }"
     }
     
-    public var fragments: List<Fragment> {
-        let res = List<Fragment>(value: self)
+    public var fragments: Lista<Fragment> {
+        let res = Lista<Fragment>(value: self)
         for element in elements {
             res.append(contentsOf: element.fragments)
         }
@@ -62,7 +63,7 @@ public struct Fragment: Scanning, Hashable {
         return Fragment(cloning: self, elements: currentElements)
     }
     
-    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: List<Query>) async throws {
+    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: Lista<Query>) async throws {
         // DLog("\(query.logPrefix)Scanning fragment \(name)")
         guard let hash = pageData as? JSON else { return }
         

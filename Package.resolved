@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "lista",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ptsochantaris/lista",
+      "state" : {
+        "branch" : "main",
+        "revision" : "26a5d4beed6c9e78415a546e89d70b9e7e31ecb0"
+      }
+    }
+  ],
+  "version" : 2
+}

@@ -15,11 +15,13 @@ let package = Package(
             targets: ["TrailerQL"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/ptsochantaris/lista", branch: "main"),
     ],
     targets: [
         .target(
             name: "TrailerQL",
             dependencies: [
+                .product(name: "Lista", package: "lista")
             ]),
         .testTarget(
             name: "TrailerQLTests",

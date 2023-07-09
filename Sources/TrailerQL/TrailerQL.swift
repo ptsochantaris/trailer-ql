@@ -1,11 +1,12 @@
 import Foundation
+import Lista
 
 typealias JSON = [String: Any]
 
 public enum TQL {
     public static let idField = Field("id")
     
-    public static let emptyList = List<Fragment>()
+    public static let emptyList = Lista<Fragment>()
     
     public static var debugLog: ((String) -> Void)?
     

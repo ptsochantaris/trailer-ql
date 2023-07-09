@@ -1,4 +1,5 @@
 import Foundation
+import Lista
 
 public struct BatchGroup: Scanning {
     public let id: UUID
@@ -44,11 +45,11 @@ public struct BatchGroup: Scanning {
         "nodes(ids: [\"" + idList.joined(separator: "\",\"") + "\"]) { " + templateGroup.fields.map(\.queryText).joined(separator: " ") + " }"
     }
     
-    public var fragments: List<Fragment> {
+    public var fragments: Lista<Fragment> {
         templateGroup.fragments
     }
     
-    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: List<Query>) async throws {
+    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: Lista<Query>) async throws {
         guard let nodes = pageData as? any Sequence else { return }
         
         for pageData in nodes.compactMap({ $0 as? JSON }) {
