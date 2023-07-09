@@ -37,7 +37,7 @@ public struct Query {
         checkRate = query.checkRate
     }
 
-    public static func batching(_ name: String, idList: [String], perNode: PerNodeBlock? = nil, @ElementsBuilder fields: () -> [Element]) -> Lista<Query> {
+    public static func batching(_ name: String, groupName: String, idList: [String], perNode: PerNodeBlock? = nil, @ElementsBuilder fields: () -> [Element]) -> Lista<Query> {
         var list = ArraySlice(idList)
         let template = Group("items", fields: fields)
         let batchLimit = template.recommendedLimit
@@ -45,7 +45,7 @@ public struct Query {
 
         while !list.isEmpty {
             let chunk = Array(list.prefix(batchLimit))
-            let batchGroup = BatchGroup(name: name, templateGroup: template, idList: chunk)
+            let batchGroup = BatchGroup(name: groupName, templateGroup: template, idList: chunk)
             let query = Query(name: name, rootElement: batchGroup, perNode: perNode)
             queries.append(query)
             list = list.dropFirst(batchLimit)
