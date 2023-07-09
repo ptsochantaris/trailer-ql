@@ -48,16 +48,15 @@ let schema = Group("characters", ("filter", "{ name: \"Rick\" }")) {
 ```
 We create a Query, and assign that schema as the root element. In this case we also want to disable the GitHub-style rate check, which this API server doesn't support. The Query initialiser has a lot of options, so be sure to check it out in more detail.
 
-The initialiser takes a closure which is called once for every item parsed by TrailerQL when it is provided with the API response data. We'll see how to do that below.
+The initialiser takes a closure (or method) in `perNode` which is called once for every item parsed by TrailerQL when it is provided with the API response data. We'll see how to do that below.
 ```        
-let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false) { scannedNode in
-    ...see below...
-}
+let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false, perNode: scanNode)
 ```
-Each call to it takes a single parameter (called `scannedNode` in this example) of type `Node`. This class contains various info on the parsed GraphQL object, such as its type, its ID, and the ID of its parent, if that exists.
+Each call to it takes a single parameter of type `Node`. `Node` info on the parsed GraphQL object, such as its type, its ID, and the ID of its parent, if that exists.
 
 TrailerQL will _not_ parse nodes that don't contain an ID, but it will happily "unwrap" layers to find items inside them. For example the "characters" group above is not an object but a container, whereas "results" is a list of objects that contain ids.
-```            
+```
+func scanNode(_ scannedNode: Node) {
     switch scannedNode.elementType {
     case "Character":
         if let newCharacter = Character(from: scannedNode) {
@@ -65,9 +64,6 @@ TrailerQL will _not_ parse nodes that don't contain an ID, but it will happily "
         }
     case "Location":
         if let newLocation = Location(from: scannedNode) {
-```
-Each `Character` has a `Location` associated with it in this endpoint's schema. So now that we have created a `Location`, we check the `.parent` property of the scanned `Node` to see if we can find a `Character` instance and add it there.
-```
             if let parentId = scannedNode.parent?.id,
                let character = Character.find(id: parentId) {
                 character.location = newLocation
@@ -76,10 +72,13 @@ Each `Character` has a `Location` associated with it in this endpoint's schema. 
     default:
         print("Unknown type: \(scannedNode.elementType)")
     }
+}
 ```
 We check `scannedNode.elementType` to know which type this callback is about, and then instantiate each object with it. Internally those initialisers use the `.jsonPayload` property of `Node` to access the node's JSON and de-serialise an instance from it.
+
+Each `Character` has a `Location` associated with it in this endpoint's schema. So now that we have created a `Location`, we check the `.parent` property of the scanned `Node` to see if we can find a `Character` instance and add it there.
         
-TrailerQL's `Query` instance now produces the GraphQL query that we wanted to create as text for us, in `query.queryText`
+This `Query` now produces the GraphQL query that we wanted to create as text for us, in `query.queryText`
 ```
 let queryText = query.queryText
 
