@@ -173,8 +173,28 @@ In this example this is actually more complicated and not very useful, but for c
 ## Batches
 Sometimes we don't want to query a single scema, but instead we want to query a bunch of items of the same type. A `BatchGroup` lets us do this by spreading a fragment over a series of Ids.
 
+Let's say we want to query the known IDs for a bunch of characters.
 ```
-let characterAndLocation = Group("items") {
+fragment characterFragment on Character {
+    id
+    name
+    status
+    location {
+        id
+        name
+        type
+    }
+}
+
+{
+    charactersByIds(ids: [1,2,3,4,5]) {
+        ... characterFragment
+    }
+}
+```
+On TrailerQL the above would be generated like this...
+```
+let queries = Query.batching("Rick And Morty", groupName: "charactersByIds", idList: ["1", "2", "3", "4", "5"], checkRate: false, perNode: scanNode) {
     Fragment(on: "Character") {
         Field.id
         Field("name")
@@ -187,23 +207,7 @@ let characterAndLocation = Group("items") {
     }
 }
 ```
-Let's say we want to query the known IDs for a bunch of characters.
-```
-{
-    charactersByIds(ids: [1,2,3,4,5]) {
-        ... characterFragment
-    }
-}
-```
-On TrailerQL the above would be generated like this...
-```
-let batch = BatchGroup(name: "charactersByIds", templateGroup: characterAndLocation, idList: ["1", "2", "3", "4", "5"])
-```
-...and then passed as the root element of the `Query`...
-```
-let query = Query(name: "Rick And Morty", rootElement: batch, checkRate: false, perNode: scanNode)
-```
-...and run the Query as before.
+...and run the Query as before. In this case depending on the size of the ID list, there may be more than one query, as TrailerQL will try to evaluate the node cost of each batch and keep each below the node limit (and remember each of those queries may need more paging depending on the case)
 
 ## License
 Copyright (c) 2023 Paul Tsochantaris. Licensed under the MIT License, see LICENSE for details.

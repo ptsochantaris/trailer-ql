@@ -61,6 +61,9 @@ public struct Group: Scanning {
 
     var recommendedLimit: Int {
         let templateCost = Float(nodeCost)
+        if templateCost == 0 {
+            return 100
+        }
         let estimatedBatchSize = (500_000 / templateCost).rounded(.down)
         return min(100, max(1, Int(estimatedBatchSize)))
     }

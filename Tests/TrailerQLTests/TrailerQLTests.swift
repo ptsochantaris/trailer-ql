@@ -177,7 +177,7 @@ final class TrailerQLTests: XCTestCase {
         //      }
         //  }
         
-        let characterAndLocation = Group("items") {
+        let queries = Query.batching("Rick And Morty", groupName: "charactersByIds", idList: ["1", "2", "3", "4", "5"], checkRate: false, perNode: scanNode) {
             Fragment(on: "Character") {
                 Field.id
                 Field("name")
@@ -190,17 +190,15 @@ final class TrailerQLTests: XCTestCase {
             }
         }
         
-        let batch = BatchGroup(name: "charactersByIds", templateGroup: characterAndLocation, idList: ["1", "2", "3", "4", "5"])
+        let firstQuery = queries.first!
         
-        let query = Query(name: "Rick And Morty", rootElement: batch, checkRate: false, perNode: scanNode)
-                
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.httpBody = try JSONSerialization.data(withJSONObject: ["query": query.queryText])
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["query": firstQuery.queryText])
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let result = try await URLSession.shared.data(for: request).0
         let resultJson = try JSONSerialization.jsonObject(with: result)
-        _ = try await query.processResponse(from: resultJson)
+        _ = try await firstQuery.processResponse(from: resultJson)
 
         print("\nAnd here they are, all \(Character.all.count) of them!")
         for character in Character.all {
