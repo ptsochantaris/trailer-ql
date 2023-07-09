@@ -1,68 +1,29 @@
-import XCTest
 @testable import TrailerQL
-
-protocol Stuff {
-    var id: String { get }
-    static var all: [Self] { get }
-}
-
-extension Stuff {
-    static func item(for id: String) -> Self? {
-        all.first { $0.id == id }
-    }
-}
-
-final class Location: Stuff {
-    static var all = [Location]()
-
-    let id: String
-    let name: String
-    let type: String
-    
-    init?(from node: Node) {
-        guard let name = node.jsonPayload["name"] as? String,
-              let type = node.jsonPayload["type"] as? String
-        else {
-            return nil
-        }
-        self.id = node.id
-        self.name = name
-        self.type = type
-    }
-}
-
-final class Character: Stuff {
-    static var all = [Character]()
-
-    let id: String
-    let name: String
-    let status: String
-    var location: Location?
-    
-    init?(from node: Node) {
-        guard let name = node.jsonPayload["name"] as? String,
-              let status = node.jsonPayload["status"] as? String
-        else {
-            return nil
-        }
-        self.id = node.id
-        self.name = name
-        self.status = status
-    }
-    
-    var description: String {
-        if let location {
-            return name + ", from " + location.name
-        } else {
-            return name
-        }
-    }
-}
+import XCTest
 
 final class TrailerQLTests: XCTestCase {
-    func testLiveQuery() async throws {
+
+    func testExampleLiveQuery() async throws {
         
-        let root = Group("characters", ("filter", "{ name: \"Rick\" }")) {
+        // Let's see where Rick and Morty currently are...
+        let url = URL(string: "https://rickandmortyapi.com/graphql")!
+
+        // Let's contruct our query schema. We want to create this GraphQL query:
+        //
+        // characters(filter: { name: "Rick" }) {
+        //     results {
+        //         id
+        //         name
+        //         status
+        //         location {
+        //             id
+        //             name
+        //             type
+        //         }
+        //     }
+        // }
+        
+        let schema = Group("characters", ("filter", "{ name: \"Rick\" }")) {
             Group("results") {
                 Field.id
                 Field("name")
@@ -74,8 +35,26 @@ final class TrailerQLTests: XCTestCase {
                 }
             }
         }
+
+        // We create a Query, and assign that schema as the root element. In this case we also
+        // want to disable the GitHub-style rate check, which this API server doesn't support.
+        // The Query initialiser has a lot of options, so be sure to check it out in more detail.
         
-        let query = Query(name: "Rick And Morty", rootElement: root, checkRate: false) { scannedNode in
+        let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false) { scannedNode in
+            
+            // This closure is called once for every item which is parsed by TrailerQL when it is
+            // provided with the API response from the API endpoint. We'll see how to do that below.
+            
+            // Each call has a single parameter of type Node. This class contains various info
+            // on the parsed GraphQL object, such as its type, its ID and the ID of its parent,
+            // if that exists. TrailerQL will _not_ parse nodes that don't contain an ID, but it will
+            // happily "unwrap" layers to find items inside them. For example the "characters" group above
+            // is not an object but a container, whereas "results" is a list of objects that contain ids.
+
+            // We check `scannedNode.elementType` to know which type this callback is about, and then
+            // instantiate each object with it. Internally those initialisers use the `.jsonPayload`
+            // property to access the node's JSON and de-serialise an instance from it.
+            
             switch scannedNode.elementType {
             case "Character":
                 if let newCharacter = Character(from: scannedNode) {
@@ -83,9 +62,14 @@ final class TrailerQLTests: XCTestCase {
                 }
             case "Location":
                 if let newLocation = Location(from: scannedNode) {
-                    Location.all.append(newLocation)
+                    // A location object, in the schema for this API endpoint, belongs to
+                    // a Character - i.e. each Character as a Location associated with it.
+                    // So now that we have created a location object, we check the `.parent`
+                    // property of the scanned node to see if we can find a `Character` instance
+                    // this belongs to and add it there.
+                    
                     if let parentId = scannedNode.parent?.id,
-                       let character = Character.item(for: parentId) {
+                       let character = Character.find(id: parentId) {
                         character.location = newLocation
                     }
                 }
@@ -94,26 +78,38 @@ final class TrailerQLTests: XCTestCase {
             }
         }
         
+        // TrailerQL now produces the GraphQL query above as text for us in `query.queryText`
+
         let queryText = query.queryText
         XCTAssert(queryText == " { characters(filter: { name: \"Rick\" }) { __typename results { __typename id name status location { __typename id name type } } } }")
+
+        // Let's turn this into JSON to send to the API endpoint by encoding the query
+        // text into a JSON object whose key is "query", and turn it into bytes
+        let dataToSend = try JSONSerialization.data(withJSONObject: ["query": queryText])
         
-        let url = URL(string: "https://rickandmortyapi.com/graphql")!
+        // Post it to the API, making sure the API knows this is JSON
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.httpBody = try JSONSerialization.data(withJSONObject: ["query": queryText])
+        request.httpBody = dataToSend
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
         let result = try await URLSession.shared.data(for: request).0
-        let resultJson = try JSONSerialization.jsonObject(with: result)
-        _ = try await query.processResponse(from: resultJson)
         
-        XCTAssertFalse(Character.all.isEmpty)
-        XCTAssertFalse(Location.all.isEmpty)
+        // Let's parse the response as a JSON object
+        let resultJson = try JSONSerialization.jsonObject(with: result)
+        
+        // And feed it into TrailerQL
+        _ = try await query.processResponse(from: resultJson)
 
+        // Sanity check that we did fetch stuff
+        XCTAssertFalse(Character.all.isEmpty)
+
+        // Let's list them out!
         print("\nAnd here they are, all \(Character.all.count) of them!")
         for character in Character.all {
             print(character.id, character.description, separator: "\t")
         }
+        
+        // Burp
         print()
     }
 }

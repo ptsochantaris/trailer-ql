@@ -12,19 +12,22 @@ let package = Package(
     products: [
         .library(
             name: "TrailerQL",
-            targets: ["TrailerQL"]),
+            targets: ["TrailerQL"]
+        )
     ],
     dependencies: [
-        .package(url: "https://github.com/ptsochantaris/lista", branch: "main"),
+        .package(url: "https://github.com/ptsochantaris/lista", branch: "main")
     ],
     targets: [
         .target(
             name: "TrailerQL",
             dependencies: [
                 .product(name: "Lista", package: "lista")
-            ]),
+            ]
+        ),
         .testTarget(
             name: "TrailerQLTests",
-            dependencies: ["TrailerQL"]),
+            dependencies: ["TrailerQL"]
+        )
     ]
 )
