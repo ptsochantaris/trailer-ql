@@ -15,14 +15,16 @@ public struct Query {
     let rootElement: Scanning
     private let parent: Node?
     private let allowsEmptyResponse: Bool
+    private let checkRate: Bool
     
     let perNodeBlock: PerNodeBlock?
     
-    public init(name: String, rootElement: Scanning, parent: Node? = nil, allowsEmptyResponse: Bool = false, perNode: PerNodeBlock? = nil) {
+    public init(name: String, rootElement: Scanning, parent: Node? = nil, allowsEmptyResponse: Bool = false, checkRate: Bool = true, perNode: PerNodeBlock? = nil) {
         self.rootElement = rootElement
         self.parent = parent
         self.name = name
         self.allowsEmptyResponse = allowsEmptyResponse
+        self.checkRate = checkRate
         perNodeBlock = perNode
     }
     
@@ -32,6 +34,7 @@ public struct Query {
         name = query.name
         allowsEmptyResponse = query.allowsEmptyResponse
         perNodeBlock = query.perNodeBlock
+        checkRate = query.checkRate
     }
     
     public static func batching(_ name: String, idList: [String], perNode: PerNodeBlock? = nil, @ElementsBuilder fields: () -> [Element]) -> Lista<Query> {
@@ -62,9 +65,15 @@ public struct Query {
         let fragments = Set(rootElement.fragments)
         return fragments.map(\.declaration).joined(separator: " ")
     }
-    
+        
     public var queryText: String {
-        fragmentQueryText + " { " + rootQueryText + " rateLimit { limit cost remaining resetAt nodeCount } }"
+        let suffix: String
+        if checkRate {
+            suffix = " rateLimit { limit cost remaining resetAt nodeCount } }"
+        } else {
+            suffix = " }"
+        }
+        return fragmentQueryText + " { " + rootQueryText + suffix
     }
     
     public var logPrefix: String {
