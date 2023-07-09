@@ -64,11 +64,11 @@ final class TrailerQLTests: XCTestCase {
         
         let root = Group("characters", ("filter", "{ name: \"Rick\" }")) {
             Group("results") {
-                TQL.idField
+                Field.id
                 Field("name")
                 Field("status")
                 Group("location") {
-                    TQL.idField
+                    Field.id
                     Field("name")
                     Field("type")
                 }

@@ -2,6 +2,8 @@ import Foundation
 import Lista
 
 public struct Field: Element {
+    public static let id = Field("id")
+    
     public let id = UUID()
     public let name: String
     public var queryText: String { name }

@@ -25,7 +25,7 @@ public struct Fragment: Scanning, Hashable {
         if elementsToKeep.isEmpty {
             return nil
         }
-        if let idField = elements.first(where: { $0.name == TQL.idField.name }) {
+        if let idField = elements.first(where: { $0.name == Field.id.name }) {
             elementsToKeep.append(idField)
         }
         return Fragment(cloning: self, elements: elementsToKeep)
