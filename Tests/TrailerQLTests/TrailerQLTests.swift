@@ -2,12 +2,17 @@
 import XCTest
 
 final class TrailerQLTests: XCTestCase {
+    
+    // Let's see where Rick and Morty currently are...
+    private let url = URL(string: "https://rickandmortyapi.com/graphql")!
 
+    override func setUp() async throws {
+        // Reset our primitive mock DB
+        Character.all.removeAll()
+    }
+    
     func testExampleLiveQuery() async throws {
         
-        // Let's see where Rick and Morty currently are...
-        let url = URL(string: "https://rickandmortyapi.com/graphql")!
-
         // Let's contruct our query schema. We want to create this GraphQL query:
         //
         // characters(filter: { name: "Rick" }) {
@@ -40,43 +45,7 @@ final class TrailerQLTests: XCTestCase {
         // want to disable the GitHub-style rate check, which this API server doesn't support.
         // The Query initialiser has a lot of options, so be sure to check it out in more detail.
         
-        let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false) { scannedNode in
-            
-            // This closure is called once for every item which is parsed by TrailerQL when it is
-            // provided with the API response from the API endpoint. We'll see how to do that below.
-            
-            // Each call has a single parameter of type Node. This class contains various info
-            // on the parsed GraphQL object, such as its type, its ID and the ID of its parent,
-            // if that exists. TrailerQL will _not_ parse nodes that don't contain an ID, but it will
-            // happily "unwrap" layers to find items inside them. For example the "characters" group above
-            // is not an object but a container, whereas "results" is a list of objects that contain ids.
-
-            // We check `scannedNode.elementType` to know which type this callback is about, and then
-            // instantiate each object with it. Internally those initialisers use the `.jsonPayload`
-            // property to access the node's JSON and de-serialise an instance from it.
-            
-            switch scannedNode.elementType {
-            case "Character":
-                if let newCharacter = Character(from: scannedNode) {
-                    Character.all.append(newCharacter)
-                }
-            case "Location":
-                if let newLocation = Location(from: scannedNode) {
-                    // A location object, in the schema for this API endpoint, belongs to
-                    // a Character - i.e. each Character as a Location associated with it.
-                    // So now that we have created a location object, we check the `.parent`
-                    // property of the scanned node to see if we can find a `Character` instance
-                    // this belongs to and add it there.
-                    
-                    if let parentId = scannedNode.parent?.id,
-                       let character = Character.find(id: parentId) {
-                        character.location = newLocation
-                    }
-                }
-            default:
-                print("Unknown type: \(scannedNode.elementType)")
-            }
-        }
+        let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false, perNode: scanNode)
         
         // TrailerQL now produces the GraphQL query above as text for us in `query.queryText`
 
@@ -92,9 +61,9 @@ final class TrailerQLTests: XCTestCase {
         request.httpMethod = "POST"
         request.httpBody = dataToSend
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                
+        // Let's get and parse the response as a JSON object
         let result = try await URLSession.shared.data(for: request).0
-        
-        // Let's parse the response as a JSON object
         let resultJson = try JSONSerialization.jsonObject(with: result)
         
         // And feed it into TrailerQL
@@ -110,6 +79,133 @@ final class TrailerQLTests: XCTestCase {
         }
         
         // Burp
+        print()
+    }
+    
+    private func scanNode(_ scannedNode: Node) {
+        // This closure is called once for every item which is parsed by TrailerQL when it is
+        // provided with the API response from the API endpoint. We'll see how to do that below.
+        
+        // Each call has a single parameter of type Node. This class contains various info
+        // on the parsed GraphQL object, such as its type, its ID and the ID of its parent,
+        // if that exists. TrailerQL will _not_ parse nodes that don't contain an ID, but it will
+        // happily "unwrap" layers to find items inside them. For example the "characters" group above
+        // is not an object but a container, whereas "results" is a list of objects that contain ids.
+
+        // We check `scannedNode.elementType` to know which type this callback is about, and then
+        // instantiate each object with it. Internally those initialisers use the `.jsonPayload`
+        // property to access the node's JSON and de-serialise an instance from it.
+        
+        switch scannedNode.elementType {
+        case "Character":
+            if let newCharacter = Character(from: scannedNode) {
+                Character.all.append(newCharacter)
+            }
+        case "Location":
+            if let newLocation = Location(from: scannedNode) {
+                // A location object, in the schema for this API endpoint, belongs to
+                // a Character - i.e. each Character as a Location associated with it.
+                // So now that we have created a location object, we check the `.parent`
+                // property of the scanned node to see if we can find a `Character` instance
+                // this belongs to and add it there.
+                
+                if let parentId = scannedNode.parent?.id,
+                   let character = Character.find(id: parentId) {
+                    character.location = newLocation
+                }
+            }
+        default:
+            print("Unknown type: \(scannedNode.elementType)")
+        }
+    }
+    
+    func testExampleLiveQueryWithFragments() async throws {
+        
+        let characterFragment = Fragment(on: "Character") {
+            Field.id
+            Field("name")
+            Field("status")
+        }
+        
+        let locationFragment = Fragment(on: "Location") {
+            Field.id
+            Field("name")
+            Field("type")
+        }
+        
+        let schema = Group("characters", ("filter", "{ name: \"Rick\" }")) {
+            Group("results") {
+                characterFragment
+                Group("location") {
+                    locationFragment
+                }
+            }
+        }
+
+        let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false, perNode: scanNode)
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["query": query.queryText])
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let result = try await URLSession.shared.data(for: request).0
+        let resultJson = try JSONSerialization.jsonObject(with: result)
+        _ = try await query.processResponse(from: resultJson)
+
+        print("\nAnd here they are, all \(Character.all.count) of them!")
+        for character in Character.all {
+            print(character.id, character.description, separator: "\t")
+        }
+    }
+    
+    func testExampleLiveQueryIds() async throws {
+
+        //  fragment characterFragment on Character {
+        //      id
+        //      name
+        //      status
+        //      location {
+        //          id
+        //          name
+        //          type
+        //      }
+        //  }
+        //
+        //  {
+        //      charactersByIds(ids: [1,8,15,19]) {
+        //          ... characterFragment
+        //      }
+        //  }
+        
+        let characterAndLocation = Group("items") {
+            Fragment(on: "Character") {
+                Field.id
+                Field("name")
+                Field("status")
+                Group("location") {
+                    Field.id
+                    Field("name")
+                    Field("type")
+                }
+            }
+        }
+        
+        let batch = BatchGroup(name: "charactersByIds", templateGroup: characterAndLocation, idList: ["1", "2", "3", "4", "5"])
+        
+        let query = Query(name: "Rick And Morty", rootElement: batch, checkRate: false, perNode: scanNode)
+                
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.httpBody = try JSONSerialization.data(withJSONObject: ["query": query.queryText])
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let result = try await URLSession.shared.data(for: request).0
+        let resultJson = try JSONSerialization.jsonObject(with: result)
+        _ = try await query.processResponse(from: resultJson)
+
+        print("\nAnd here they are, all \(Character.all.count) of them!")
+        for character in Character.all {
+            print(character.id, character.description, separator: "\t")
+        }
         print()
     }
 }

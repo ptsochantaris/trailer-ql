@@ -45,7 +45,7 @@ public struct Query {
 
         while !list.isEmpty {
             let chunk = Array(list.prefix(batchLimit))
-            let batchGroup = BatchGroup(templateGroup: template, idList: chunk)
+            let batchGroup = BatchGroup(name: name, templateGroup: template, idList: chunk)
             let query = Query(name: name, rootElement: batchGroup, perNode: perNode)
             queries.append(query)
             list = list.dropFirst(batchLimit)

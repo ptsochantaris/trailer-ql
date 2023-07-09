@@ -8,9 +8,9 @@ public struct BatchGroup: Scanning {
     private let idList: [String]
     private let templateGroup: Group
 
-    public init(templateGroup: Group, idList: [String]) {
+    public init(name: String, templateGroup: Group, idList: [String]) {
         id = UUID()
-        name = "nodes"
+        self.name = name
         self.templateGroup = templateGroup
         self.idList = idList
         assert(idList.count <= 100)
@@ -42,7 +42,7 @@ public struct BatchGroup: Scanning {
     }
 
     public var queryText: String {
-        "nodes(ids: [\"" + idList.joined(separator: "\",\"") + "\"]) { " + templateGroup.fields.map(\.queryText).joined(separator: " ") + " }"
+        "\(name)(ids: [\"" + idList.joined(separator: "\",\"") + "\"]) { " + templateGroup.fields.map(\.queryText).joined(separator: " ") + " }"
     }
 
     public var fragments: Lista<Fragment> {
