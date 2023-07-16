@@ -5,6 +5,7 @@ public final class Node: Hashable {
     public let elementType: String
     public let jsonPayload: [String: Any]
     public let parent: Node?
+    public var flags: Int
 
     init?(jsonPayload: JSON, parent: Node?) {
         guard let id = jsonPayload["id"] as? String,
@@ -15,6 +16,7 @@ public final class Node: Hashable {
         self.elementType = elementType
         self.jsonPayload = jsonPayload
         self.parent = parent
+        self.flags = 0
     }
 
     public func hash(into hasher: inout Hasher) {
