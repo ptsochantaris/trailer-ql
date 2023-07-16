@@ -2,7 +2,6 @@
 import XCTest
 
 final class TrailerQLTests: XCTestCase {
-    
     // Let's see where Rick and Morty currently are...
     private let url = URL(string: "https://rickandmortyapi.com/graphql")!
 
@@ -10,9 +9,8 @@ final class TrailerQLTests: XCTestCase {
         // Reset our primitive mock DB
         Character.all.removeAll()
     }
-    
+
     func testExampleLiveQuery() async throws {
-        
         // Let's contruct our query schema. We want to create this GraphQL query:
         //
         // characters(filter: { name: "Rick" }) {
@@ -27,7 +25,7 @@ final class TrailerQLTests: XCTestCase {
         //         }
         //     }
         // }
-        
+
         let schema = Group("characters", ("filter", "{ name: \"Rick\" }")) {
             Group("results") {
                 Field.id
@@ -44,9 +42,9 @@ final class TrailerQLTests: XCTestCase {
         // We create a Query, and assign that schema as the root element. In this case we also
         // want to disable the GitHub-style rate check, which this API server doesn't support.
         // The Query initialiser has a lot of options, so be sure to check it out in more detail.
-        
+
         let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false, perNode: scanNode)
-        
+
         // TrailerQL now produces the GraphQL query above as text for us in `query.queryText`
 
         let queryText = query.queryText
@@ -55,17 +53,17 @@ final class TrailerQLTests: XCTestCase {
         // Let's turn this into JSON to send to the API endpoint by encoding the query
         // text into a JSON object whose key is "query", and turn it into bytes
         let dataToSend = try JSONSerialization.data(withJSONObject: ["query": queryText])
-        
+
         // Post it to the API, making sure the API knows this is JSON
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = dataToSend
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-                
+
         // Let's get and parse the response as a JSON object
         let result = try await URLSession.shared.data(for: request).0
         let resultJson = try JSONSerialization.jsonObject(with: result)
-        
+
         // And feed it into TrailerQL
         _ = try await query.processResponse(from: resultJson)
 
@@ -77,15 +75,15 @@ final class TrailerQLTests: XCTestCase {
         for character in Character.all {
             print(character.id, character.description, separator: "\t")
         }
-        
+
         // Burp
         print()
     }
-    
+
     private func scanNode(_ scannedNode: Node) {
         // This closure is called once for every item which is parsed by TrailerQL when it is
         // provided with the API response from the API endpoint. We'll see how to do that below.
-        
+
         // Each call has a single parameter of type Node. This class contains various info
         // on the parsed GraphQL object, such as its type, its ID and the ID of its parent,
         // if that exists. TrailerQL will _not_ parse nodes that don't contain an ID, but it will
@@ -95,7 +93,7 @@ final class TrailerQLTests: XCTestCase {
         // We check `scannedNode.elementType` to know which type this callback is about, and then
         // instantiate each object with it. Internally those initialisers use the `.jsonPayload`
         // property to access the node's JSON and de-serialise an instance from it.
-        
+
         switch scannedNode.elementType {
         case "Character":
             if let newCharacter = Character(from: scannedNode) {
@@ -108,7 +106,7 @@ final class TrailerQLTests: XCTestCase {
                 // So now that we have created a location object, we check the `.parent`
                 // property of the scanned node to see if we can find a `Character` instance
                 // this belongs to and add it there.
-                
+
                 if let parentId = scannedNode.parent?.id,
                    let character = Character.find(id: parentId) {
                     character.location = newLocation
@@ -118,21 +116,20 @@ final class TrailerQLTests: XCTestCase {
             print("Unknown type: \(scannedNode.elementType)")
         }
     }
-    
+
     func testExampleLiveQueryWithFragments() async throws {
-        
         let characterFragment = Fragment(on: "Character") {
             Field.id
             Field("name")
             Field("status")
         }
-        
+
         let locationFragment = Fragment(on: "Location") {
             Field.id
             Field("name")
             Field("type")
         }
-        
+
         let schema = Group("characters", ("filter", "{ name: \"Rick\" }")) {
             Group("results") {
                 characterFragment
@@ -143,7 +140,7 @@ final class TrailerQLTests: XCTestCase {
         }
 
         let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false, perNode: scanNode)
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = try JSONSerialization.data(withJSONObject: ["query": query.queryText])
@@ -157,9 +154,8 @@ final class TrailerQLTests: XCTestCase {
             print(character.id, character.description, separator: "\t")
         }
     }
-    
-    func testExampleLiveQueryIds() async throws {
 
+    func testExampleLiveQueryIds() async throws {
         //  fragment characterFragment on Character {
         //      id
         //      name
@@ -176,7 +172,7 @@ final class TrailerQLTests: XCTestCase {
         //          ... characterFragment
         //      }
         //  }
-        
+
         let queries = Query.batching("Rick And Morty", groupName: "charactersByIds", idList: ["1", "2", "3", "4", "5"], checkRate: false, perNode: scanNode) {
             Fragment(on: "Character") {
                 Field.id
@@ -189,9 +185,9 @@ final class TrailerQLTests: XCTestCase {
                 }
             }
         }
-        
+
         let firstQuery = queries.first!
-        
+
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = try JSONSerialization.data(withJSONObject: ["query": firstQuery.queryText])

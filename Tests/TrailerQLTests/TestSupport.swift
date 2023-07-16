@@ -3,7 +3,6 @@ import Foundation
 
 // Our, erm, heroes
 final class Character {
-    
     // Our minimalist database of characters :)
     static var all = [Character]()
     static func find(id: String) -> Character? {

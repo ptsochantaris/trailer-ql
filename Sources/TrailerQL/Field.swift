@@ -8,7 +8,7 @@ public struct Field: Element {
     public let name: String
     public var queryText: String { name }
     public let fragments = TQL.emptyList
-    public let nodeCost = 0
+    public var nodeCost: Int { 0 }
 
     public init(_ name: String) {
         self.name = name

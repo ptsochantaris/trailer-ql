@@ -5,10 +5,6 @@ public final class Node: Hashable {
     public let elementType: String
     public let jsonPayload: [String: Any]
     public let parent: Node?
-    public var creationSkipped = false
-    public var created = false
-    public var updated = false
-    public var forcedUpdate = false
 
     init?(jsonPayload: JSON, parent: Node?) {
         guard let id = jsonPayload["id"] as? String,
