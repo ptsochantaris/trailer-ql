@@ -68,8 +68,8 @@ public struct Fragment: Scanning, Hashable {
         guard let hash = pageData as? JSON else { return }
 
         for element in elements {
-            if let element = element as? Scanning, let elementData = hash[element.name] {
-                try await element.scan(query: query, pageData: elementData, parent: parent, extraQueries: extraQueries)
+            if let scannable = element as? Scanning, let elementData = hash[element.name] {
+                try await scannable.scan(query: query, pageData: elementData, parent: parent, extraQueries: extraQueries)
             }
         }
     }

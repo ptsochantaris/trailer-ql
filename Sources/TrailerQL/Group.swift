@@ -151,12 +151,14 @@ public struct Group: Scanning {
             resolvedParent = parent
         }
 
-        for scannable in fields.compactMap({ $0 as? Scanning }) {
-            if scannable is Fragment {
-                try await scannable.scan(query: query, pageData: node, parent: resolvedParent, extraQueries: extraQueries)
-
-            } else if let fieldData = node[scannable.name] {
-                try await scannable.scan(query: query, pageData: fieldData, parent: resolvedParent, extraQueries: extraQueries)
+        for field in fields {
+            if let scannable = field as? Scanning {
+                if scannable is Fragment {
+                    try await scannable.scan(query: query, pageData: node, parent: resolvedParent, extraQueries: extraQueries)
+                    
+                } else if let fieldData = node[scannable.name] {
+                    try await scannable.scan(query: query, pageData: fieldData, parent: resolvedParent, extraQueries: extraQueries)
+                }
             }
         }
     }

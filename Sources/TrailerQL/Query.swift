@@ -86,9 +86,9 @@ public struct Query {
 
     public func processResponse(from json: Any?) async throws -> Lista<Query> {
         guard
-            let json = json as? [String: Any],
+            let json = json as? JSON,
             let allData = json["data"] as? JSON,
-            let data = (parent == nil) ? allData : allData["node"] as? [String: Any],
+            let data = (parent == nil) ? allData : allData["node"] as? JSON,
             let topData = data[rootElement.name]
         else {
             if allowsEmptyResponse {
