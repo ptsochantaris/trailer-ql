@@ -16,7 +16,7 @@ public final class Node: Hashable {
         self.elementType = elementType
         self.jsonPayload = jsonPayload
         self.parent = parent
-        self.flags = 0
+        flags = 0
     }
 
     public func hash(into hasher: inout Hasher) {

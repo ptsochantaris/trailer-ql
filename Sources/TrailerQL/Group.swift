@@ -155,7 +155,7 @@ public struct Group: Scanning {
             if let scannable = field as? Scanning {
                 if scannable is Fragment {
                     try await scannable.scan(query: query, pageData: node, parent: resolvedParent, extraQueries: extraQueries)
-                    
+
                 } else if let fieldData = node[scannable.name] {
                     try await scannable.scan(query: query, pageData: fieldData, parent: resolvedParent, extraQueries: extraQueries)
                 }
