@@ -37,7 +37,7 @@ public struct Query {
         checkRate = query.checkRate
     }
 
-    public static func batching(_ name: String, groupName: String, idList: [String], checkRate: Bool = true, maxCost: Int = 500_000, perNode: PerNodeBlock? = nil, @ElementsBuilder fields: () -> [Element]) -> Lista<Query> {
+    public static func batching(_ name: String, groupName: String, idList: any Sequence<String>, checkRate: Bool = true, maxCost: Int = 500_000, perNode: PerNodeBlock? = nil, @ElementsBuilder fields: () -> [Element]) -> Lista<Query> {
         var list = ArraySlice(idList)
         let template = Group("items", fields: fields)
         let batchLimit = template.recommendedLimit(upTo: maxCost)

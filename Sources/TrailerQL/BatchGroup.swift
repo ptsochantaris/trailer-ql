@@ -5,10 +5,10 @@ public struct BatchGroup: Scanning {
     public let id: UUID
     public let name: String
 
-    private let idList: [String]
+    private let idList: any Collection<String>
     private let templateGroup: Group
 
-    public init(name: String, templateGroup: Group, idList: [String]) {
+    public init(name: String, templateGroup: Group, idList: any Collection<String>) {
         id = UUID()
         self.name = name
         self.templateGroup = templateGroup
