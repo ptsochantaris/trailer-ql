@@ -60,7 +60,7 @@ public struct Query {
         if !chunk.isEmpty {
             createQuery(from: chunk)
         }
-        
+
         return queries
     }
 
