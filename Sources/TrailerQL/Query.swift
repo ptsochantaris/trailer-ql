@@ -37,19 +37,30 @@ public struct Query {
         checkRate = query.checkRate
     }
 
-    public static func batching(_ name: String, groupName: String, idList: any Sequence<String>, checkRate: Bool = true, maxCost: Int = 500_000, perNode: PerNodeBlock? = nil, @ElementsBuilder fields: () -> [Element]) -> Lista<Query> {
-        var list = ArraySlice(idList)
+    public static func batching(_ name: String, groupName: String, idList: some Sequence<String>, checkRate: Bool = true, maxCost: Int = 500_000, perNode: PerNodeBlock? = nil, @ElementsBuilder fields: () -> [Element]) -> Lista<Query> {
         let template = Group("items", fields: fields)
         let batchLimit = template.recommendedLimit(upTo: maxCost)
         let queries = Lista<Query>()
 
-        while !list.isEmpty {
-            let chunk = Array(list.prefix(batchLimit))
+        func createQuery(from chunk: [String]) {
             let batchGroup = BatchGroup(name: groupName, templateGroup: template, idList: chunk)
             let query = Query(name: name, rootElement: batchGroup, checkRate: checkRate, perNode: perNode)
             queries.append(query)
-            list = list.dropFirst(batchLimit)
         }
+
+        var chunk = [String]()
+        chunk.reserveCapacity(batchLimit)
+        for id in idList {
+            chunk.append(id)
+            if chunk.count == batchLimit {
+                createQuery(from: chunk)
+                chunk.removeAll(keepingCapacity: true)
+            }
+        }
+        if !chunk.isEmpty {
+            createQuery(from: chunk)
+        }
+        
         return queries
     }
 

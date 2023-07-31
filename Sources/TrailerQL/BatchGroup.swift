@@ -8,7 +8,7 @@ public struct BatchGroup: Scanning {
     private let idList: any Collection<String>
     private let templateGroup: Group
 
-    public init(name: String, templateGroup: Group, idList: any Collection<String>) {
+    public init(name: String, templateGroup: Group, idList: some Collection<String>) {
         id = UUID()
         self.name = name
         self.templateGroup = templateGroup
