@@ -1,6 +1,10 @@
 TrailerQL
 =========
 
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fptsochantaris%2Ftrailer-ql%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/ptsochantaris/trailer-ql)
+
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fptsochantaris%2Ftrailer-ql%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/ptsochantaris/trailer-ql)
+
 ## About
 TrailerQL is a Swift package that simplifies many of the steps involved in querying a GraphQL endpoint.
 
