@@ -9,9 +9,14 @@ TrailerQL is a Swift package that simplifies many of the steps involved in query
 - Fully implemented in async/await
 - Used in production apps to query and parse GitHub endpoints.
 
-It is currently used in [Trailer](https://github.com/ptsochantaris/trailer) and [Trailer-CLI](https://github.com/ptsochantaris/trailer-cli)
+Currently used in
+- [Trailer](https://github.com/ptsochantaris/trailer)
+- [Trailer-CLI](https://github.com/ptsochantaris/trailer-cli)
 
-## Example (see `TrailerQLTests.swift` for complete code)
+## Usage
+
+_See `TrailerQLTests.swift` for the complete code usde here_
+
 Let's see where Rick and Morty currently are...
 ```
 let url = URL(string: "https://rickandmortyapi.com/graphql")!
@@ -117,7 +122,7 @@ for character in Character.all {
 }
 ```
 
-## Fragments
+### Fragments
 You can use GraphQL fragments with `Fragment`. For instance the query above could be written as:
 ```
 fragment locationFragment on Location { 
@@ -169,7 +174,7 @@ let schema = Group("characters", ("filter", "{ name: \"Rick\" }")) {
 
 In this example this is actually more complicated and not very useful, but for cases where we need to query the same type in various places, fragments both increase the speed of the query and also make it far easier to keep the schema uniform and readable. Picture how better this would make things if there were more groups that expected `Character`s or `Location`s for instance.
 
-## Batches
+### Batches
 Sometimes we don't want to query a single scema, but instead we want to query a bunch of items of the same type. A `BatchGroup` lets us do this by spreading a fragment over a series of Ids.
 
 Let's say we want to query the known IDs for a bunch of characters.
