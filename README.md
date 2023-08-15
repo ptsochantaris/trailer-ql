@@ -1,17 +1,15 @@
-TrailerQL
-=========
+# TrailerQL
+
+TrailerQL is a Swift package that simplifies many of the steps involved in querying a GraphQL endpoint.
 
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fptsochantaris%2Ftrailer-ql%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/ptsochantaris/trailer-ql) [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fptsochantaris%2Ftrailer-ql%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/ptsochantaris/trailer-ql)
-
-## About
-TrailerQL is a Swift package that simplifies many of the steps involved in querying a GraphQL endpoint.
 
 - Type-safe creation of queries using element builder syntax
 - Highly optimised scanning and parsing of returned data with callbacks
 - Fully implemented in async/await
 - Used in production apps to query and parse GitHub endpoints.
 
-Currently used in [Trailer](https://github.com/ptsochantaris/trailer) and [Trailer-CLI](https://github.com/ptsochantaris/trailer-cli)
+It is currently used in [Trailer](https://github.com/ptsochantaris/trailer) and [Trailer-CLI](https://github.com/ptsochantaris/trailer-cli)
 
 ## Example (see `TrailerQLTests.swift` for complete code)
 Let's see where Rick and Morty currently are...
