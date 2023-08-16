@@ -1,3 +1,5 @@
+<img src="https://ptsochantaris.github.io/trailer/TrailerQLLogo.webp" alt="Logo" width=256 align="right">
+
 # TrailerQL
 
 TrailerQL is a Swift package that simplifies many of the steps involved in querying a GraphQL endpoint.
