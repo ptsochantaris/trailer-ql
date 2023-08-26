@@ -8,7 +8,7 @@ public struct Query {
         public static let shared = ActorType()
     }
 
-    public typealias PerNodeBlock = @NodeActor (Node) async throws -> Void
+    public typealias PerNodeBlock = @NodeActor (ParseOutput) async throws -> Void
 
     public let name: String
 
@@ -113,8 +113,13 @@ public struct Query {
 
         let extraQueries = Lista<Query>()
         try await rootElement.scan(query: self, pageData: topData, parent: parent, extraQueries: extraQueries)
+
+        try? await perNodeBlock?(.queryPageComplete)
+
         if extraQueries.count == 0 {
             TQL.log("\(logPrefix)Parsed all pages")
+            try? await perNodeBlock?(.queryComplete)
+
         } else {
             TQL.log("\(logPrefix)Needs more page data (\(extraQueries.count) queries)")
         }

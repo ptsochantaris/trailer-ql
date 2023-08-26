@@ -143,7 +143,7 @@ public struct Group: Scanning {
         let resolvedParent: Node?
 
         if let o = Node(jsonPayload: node, parent: parent) {
-            try await query.perNodeBlock?(o)
+            try await query.perNodeBlock?(.node(o))
             resolvedParent = o
 
         } else {

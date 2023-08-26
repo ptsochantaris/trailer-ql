@@ -1,5 +1,9 @@
 import Foundation
 
+public enum ParseOutput {
+    case node(Node), queryPageComplete, queryComplete
+}
+
 public final class Node: Hashable {
     public let id: String
     public let elementType: String

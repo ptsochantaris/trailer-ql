@@ -76,44 +76,58 @@ final class TrailerQLTests: XCTestCase {
             print(character.id, character.description, separator: "\t")
         }
 
-        // Burp
+        // Buuuuurp
         print()
     }
 
-    private func scanNode(_ scannedNode: Node) {
+    private func scanNode(_ output: ParseOutput) {
         // This closure is called once for every item which is parsed by TrailerQL when it is
         // provided with the API response from the API endpoint. We'll see how to do that below.
+        // Each call has a single parameter of type ParseOutput that reports on the progress of the
+        // parsing.
 
-        // Each call has a single parameter of type Node. This class contains various info
-        // on the parsed GraphQL object, such as its type, its ID and the ID of its parent,
-        // if that exists. TrailerQL will _not_ parse nodes that don't contain an ID, but it will
-        // happily "unwrap" layers to find items inside them. For example the "characters" group above
-        // is not an object but a container, whereas "results" is a list of objects that contain ids.
+        switch output {
+        case .queryComplete:
+            print("All nodes from the query received")
 
-        // We check `scannedNode.elementType` to know which type this callback is about, and then
-        // instantiate each object with it. Internally those initialisers use the `.jsonPayload`
-        // property to access the node's JSON and de-serialise an instance from it.
+        case .queryPageComplete:
+            print("All nodes from returned page of the query are received")
 
-        switch scannedNode.elementType {
-        case "Character":
-            if let newCharacter = Character(from: scannedNode) {
-                Character.all.append(newCharacter)
-            }
-        case "Location":
-            if let newLocation = Location(from: scannedNode) {
-                // A location object, in the schema for this API endpoint, belongs to
-                // a Character - i.e. each Character as a Location associated with it.
-                // So now that we have created a location object, we check the `.parent`
-                // property of the scanned node to see if we can find a `Character` instance
-                // this belongs to and add it there.
+        case let .node(scannedNode):
+            // Node contains various info on the parsed GraphQL object, such as its type, its ID and the ID of its
+            // parent, if that exists. TrailerQL will _not_ parse nodes that don't contain an ID, but it will
+            // happily "unwrap" layers to find items inside them. For example the "characters" group above
+            // is not an object but a container, whereas "results" is a list of objects that contain ids.
 
-                if let parentId = scannedNode.parent?.id,
-                   let character = Character.find(id: parentId) {
-                    character.location = newLocation
+            // We check `scannedNode.elementType` to know which type this callback is about, and then
+            // instantiate each object with it. Internally those initialisers use the `.jsonPayload`
+            // property to access the node's JSON and de-serialise an instance from it.
+
+            switch scannedNode.elementType {
+            case "Character":
+                if let newCharacter = Character(from: scannedNode) {
+                    Character.all.append(newCharacter)
+                } else {
+                    print("Could not parse character from: \(scannedNode.jsonPayload)")
                 }
+            case "Location":
+                if let newLocation = Location(from: scannedNode) {
+                    // A location object, in the schema for this API endpoint, belongs to
+                    // a Character - i.e. each Character as a Location associated with it.
+                    // So now that we have created a location object, we check the `.parent`
+                    // property of the scanned node to see if we can find a `Character` instance
+                    // this belongs to and add it there.
+
+                    if let parentId = scannedNode.parent?.id,
+                       let character = Character.find(id: parentId) {
+                        character.location = newLocation
+                    }
+                } else {
+                    print("Could not parse location from: \(scannedNode.jsonPayload)")
+                }
+            default:
+                print("Unknown type: \(scannedNode.elementType)")
             }
-        default:
-            print("Unknown type: \(scannedNode.elementType)")
         }
     }
 
