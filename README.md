@@ -63,25 +63,40 @@ Each call to it takes a single parameter of type `Node`. `Node` info on the pars
 
 TrailerQL will _not_ parse nodes that don't contain an ID, but it will happily "unwrap" layers to find items inside them. For example the "characters" group above is not an object but a container, whereas "results" is a list of objects that contain ids.
 ```
-func scanNode(_ scannedNode: Node) {
-    switch scannedNode.elementType {
-    case "Character":
-        if let newCharacter = Character(from: scannedNode) {
-            Character.all.append(newCharacter)
-        }
-    case "Location":
-        if let newLocation = Location(from: scannedNode) {
-            if let parentId = scannedNode.parent?.id,
-               let character = Character.find(id: parentId) {
-                character.location = newLocation
+private func scanNode(_ output: ParseOutput) {
+    switch output {
+    case .queryComplete:
+        print("All nodes from the query received")
+
+    case .queryPageComplete:
+        print("All nodes from returned page of the query are received")
+
+    case let .node(scannedNode):
+        switch scannedNode.elementType {
+        case "Character":
+            if let newCharacter = Character(from: scannedNode) {
+                Character.all.append(newCharacter)
+            } else {
+                print("Could not parse character from: \(scannedNode.jsonPayload)")
             }
+        case "Location":
+            if let newLocation = Location(from: scannedNode) {
+                if let parentId = scannedNode.parent?.id,
+                   let character = Character.find(id: parentId) {
+                    character.location = newLocation
+                }
+            } else {
+                print("Could not parse location from: \(scannedNode.jsonPayload)")
+            }
+        default:
+            print("Unknown type: \(scannedNode.elementType)")
         }
-    default:
-        print("Unknown type: \(scannedNode.elementType)")
     }
 }
 ```
 We check `scannedNode.elementType` to know which type this callback is about, and then instantiate each object with it. Internally those initialisers use the `.jsonPayload` property of `Node` to access the node's JSON and de-serialise an instance from it.
+
+`queryComplete` and `queryPageComplete` can be cues to whatever parsing logic handles these nodes, which may need to know when an entire tree of a query (or page) has been delivered first.
 
 Each `Character` has a `Location` associated with it in this endpoint's schema. So now that we have created a `Location`, we check the `.parent` property of the scanned `Node` to see if we can find a `Character` instance and add it there.
         
