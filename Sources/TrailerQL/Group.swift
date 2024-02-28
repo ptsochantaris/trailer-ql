@@ -111,12 +111,10 @@ public struct Group: Scanning {
             }
         }
 
-        let query: String
-
-        if brackets.count > 0 {
-            query = name + "(" + brackets.joined(separator: ", ") + ")"
+        let query: String = if brackets.count > 0 {
+            name + "(" + brackets.joined(separator: ", ") + ")"
         } else {
-            query = name
+            name
         }
 
         let fieldsText = "__typename " + fields.map(\.queryText).joined(separator: " ")
@@ -139,10 +137,10 @@ public struct Group: Scanning {
         return res
     }
 
-    private func scanNode(_ node: JSON, query: Query, parent: Node?, extraQueries: Lista<Query>) async throws {
+    private func scanNode(_ node: JSON, query: Query, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
         let resolvedParent: Node?
 
-        if let o = Node(jsonPayload: node, parent: parent) {
+        if let o = Node(jsonPayload: node, parent: parent, relationship: relationship) {
             try await query.perNodeBlock?(.node(o))
             resolvedParent = o
 
@@ -154,19 +152,19 @@ public struct Group: Scanning {
         for field in fields {
             if let scannable = field as? Scanning {
                 if scannable is Fragment {
-                    try await scannable.scan(query: query, pageData: node, parent: resolvedParent, extraQueries: extraQueries)
+                    try await scannable.scan(query: query, pageData: node, parent: resolvedParent, relationship: field.name, extraQueries: extraQueries)
 
                 } else if let fieldData = node[scannable.name] {
-                    try await scannable.scan(query: query, pageData: fieldData, parent: resolvedParent, extraQueries: extraQueries)
+                    try await scannable.scan(query: query, pageData: fieldData, parent: resolvedParent, relationship: field.name, extraQueries: extraQueries)
                 }
             }
         }
     }
 
-    private func scanEdges(_ edges: [JSON], pageInfo: JSON?, query: Query, parent: Node?, extraQueries: Lista<Query>) async throws {
+    private func scanEdges(_ edges: [JSON], pageInfo: JSON?, query: Query, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
         do {
             for node in edges.compactMap({ $0["node"] as? JSON }) {
-                try await scanNode(node, query: query, parent: parent, extraQueries: extraQueries)
+                try await scanNode(node, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
             }
 
             if let latestCursor = edges.last?["cursor"] as? String,
@@ -183,30 +181,30 @@ public struct Group: Scanning {
         }
     }
 
-    private func scanList(nodes: [JSON], query: Query, parent: Node?, extraQueries: Lista<Query>) async throws {
+    private func scanList(nodes: [JSON], query: Query, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
         do {
             for node in nodes {
-                try await scanNode(node, query: query, parent: parent, extraQueries: extraQueries)
+                try await scanNode(node, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
             }
         } catch TQL.Error.alreadyParsed {
             // exhausted new nodes
         }
     }
 
-    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: Lista<Query>) async throws {
+    public func scan(query: Query, pageData: Any, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
         if let hash = pageData as? JSON {
             if let edges = hash["edges"] as? [JSON] {
-                try await scanEdges(edges, pageInfo: hash["pageInfo"] as? JSON, query: query, parent: parent, extraQueries: extraQueries)
+                try await scanEdges(edges, pageInfo: hash["pageInfo"] as? JSON, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
             } else {
                 do {
-                    try await scanNode(hash, query: query, parent: parent, extraQueries: extraQueries)
+                    try await scanNode(hash, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
                 } catch TQL.Error.alreadyParsed {
                     // not a new node, ignore
                 }
             }
 
         } else if let nodes = pageData as? [JSON] {
-            try await scanList(nodes: nodes, query: query, parent: parent, extraQueries: extraQueries)
+            try await scanList(nodes: nodes, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
         }
         if extraQueries.count > 0 {
             TQL.log("\(query.logPrefix)(Group: \(name)) will need further paging: \(extraQueries.count) new queries")

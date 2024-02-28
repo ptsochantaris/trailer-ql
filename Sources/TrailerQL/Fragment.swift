@@ -63,13 +63,13 @@ public struct Fragment: Scanning, Hashable {
         return Fragment(cloning: self, elements: currentElements)
     }
 
-    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: Lista<Query>) async throws {
+    public func scan(query: Query, pageData: Any, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
         // DLog("\(query.logPrefix)Scanning fragment \(name)")
         guard let hash = pageData as? JSON else { return }
 
         for element in elements {
             if let scannable = element as? Scanning, let elementData = hash[element.name] {
-                try await scannable.scan(query: query, pageData: elementData, parent: parent, extraQueries: extraQueries)
+                try await scannable.scan(query: query, pageData: elementData, parent: parent, relationship: element.name, extraQueries: extraQueries)
             }
         }
     }

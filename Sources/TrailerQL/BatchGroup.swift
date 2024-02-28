@@ -49,12 +49,12 @@ public struct BatchGroup: Scanning {
         templateGroup.fragments
     }
 
-    public func scan(query: Query, pageData: Any, parent: Node?, extraQueries: Lista<Query>) async throws {
+    public func scan(query: Query, pageData: Any, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
         guard let nodes = pageData as? any Sequence else { return }
 
         for pageData in nodes {
             if let jsonData = pageData as? JSON {
-                try await templateGroup.scan(query: query, pageData: jsonData, parent: parent, extraQueries: extraQueries)
+                try await templateGroup.scan(query: query, pageData: jsonData, parent: parent, relationship: relationship, extraQueries: extraQueries)
             }
         }
     }

@@ -21,9 +21,9 @@ public enum TQL {
         public var localizedDescription: String {
             switch self {
             case .alreadyParsed:
-                return "Node already parsed in previous sync"
+                "Node already parsed in previous sync"
             case let .apiError(text):
-                return "API error: \(text)"
+                "API error: \(text)"
             }
         }
     }

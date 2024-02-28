@@ -16,9 +16,9 @@ public struct Field: Element {
 
     public func asShell(for element: Element, batchRootId _: String?) -> Element? {
         if element.id == id {
-            return element
+            element
         } else {
-            return nil
+            nil
         }
     }
 }

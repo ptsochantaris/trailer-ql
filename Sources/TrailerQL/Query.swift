@@ -66,9 +66,9 @@ public struct Query {
 
     private var rootQueryText: String {
         if let parent {
-            return "node(id: \"\(parent.id)\") { ... on \(parent.elementType) { " + rootElement.queryText + " } }"
+            "node(id: \"\(parent.id)\") { ... on \(parent.elementType) { " + rootElement.queryText + " } }"
         } else {
-            return rootElement.queryText
+            rootElement.queryText
         }
     }
 
@@ -78,11 +78,10 @@ public struct Query {
     }
 
     public var queryText: String {
-        let suffix: String
-        if checkRate {
-            suffix = " rateLimit { limit cost remaining resetAt nodeCount } }"
+        let suffix = if checkRate {
+            " rateLimit { limit cost remaining resetAt nodeCount } }"
         } else {
-            suffix = " }"
+            " }"
         }
         return fragmentQueryText + " { " + rootQueryText + suffix
     }
@@ -112,7 +111,7 @@ public struct Query {
         TQL.log("\(logPrefix)Scanning result")
 
         let extraQueries = Lista<Query>()
-        try await rootElement.scan(query: self, pageData: topData, parent: parent, extraQueries: extraQueries)
+        try await rootElement.scan(query: self, pageData: topData, parent: parent, relationship: rootElement.name, extraQueries: extraQueries)
 
         try? await perNodeBlock?(.queryPageComplete)
 

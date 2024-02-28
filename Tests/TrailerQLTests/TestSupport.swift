@@ -27,9 +27,9 @@ final class Character {
 
     var description: String {
         if let location {
-            return name + ", from " + location.name
+            name + ", from " + location.name
         } else {
-            return name
+            name
         }
     }
 }
