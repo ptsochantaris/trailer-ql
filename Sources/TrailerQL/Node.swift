@@ -9,7 +9,7 @@ public final class Node: Hashable {
     public let elementType: String
     public let jsonPayload: [String: Any]
     public let parent: Node?
-    public let parentContext: String?
+    public let relationship: String?
     public var flags: Int
 
     init?(jsonPayload: JSON, parent: Node?, relationship: String?) {
@@ -21,7 +21,7 @@ public final class Node: Hashable {
         self.elementType = elementType
         self.jsonPayload = jsonPayload
         self.parent = parent
-        self.parentContext = relationship
+        self.relationship = relationship
         flags = 0
     }
 
