@@ -2,11 +2,11 @@ import Foundation
 import Lista
 
 public struct Group: Scanning {
-    public enum Paging {
+    public enum Paging: Sendable {
         case none, first(count: Int, paging: Bool), last(count: Int), max
     }
 
-    public typealias Param = (name: String, value: LosslessStringConvertible)
+    public typealias Param = (name: String, value: LosslessStringConvertible & Sendable)
 
     public let id: UUID
     public let name: String

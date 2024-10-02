@@ -1,7 +1,7 @@
 import Foundation
 import Lista
 
-public protocol Element {
+public protocol Element: Sendable {
     var id: UUID { get }
     var name: String { get }
     var queryText: String { get }

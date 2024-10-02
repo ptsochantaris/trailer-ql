@@ -1,10 +1,11 @@
 import Foundation
+@preconcurrency import Lista
 @testable import TrailerQL
 
 // Our, erm, heroes
 final class Character {
     // Our minimalist database of characters :)
-    static var all = [Character]()
+    static let all = Lista<Character>()
     static func find(id: String) -> Character? {
         all.first { $0.id == id }
     }

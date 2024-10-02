@@ -5,14 +5,14 @@ public struct BatchGroup: Scanning {
     public let id: UUID
     public let name: String
 
-    private let idList: any Collection<String>
+    private let idList: [String]
     private let templateGroup: Group
 
     public init(name: String, templateGroup: Group, idList: some Collection<String>) {
         id = UUID()
         self.name = name
         self.templateGroup = templateGroup
-        self.idList = idList
+        self.idList = Array(idList)
         assert(idList.count <= 100)
     }
 

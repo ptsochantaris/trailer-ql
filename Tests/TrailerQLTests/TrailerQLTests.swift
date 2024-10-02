@@ -43,7 +43,9 @@ final class TrailerQLTests: XCTestCase {
         // want to disable the GitHub-style rate check, which this API server doesn't support.
         // The Query initialiser has a lot of options, so be sure to check it out in more detail.
 
-        let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false, perNode: scanNode)
+        let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false) {
+            TrailerQLTests.scanNode($0)
+        }
 
         // TrailerQL now produces the GraphQL query above as text for us in `query.queryText`
 
@@ -80,7 +82,8 @@ final class TrailerQLTests: XCTestCase {
         print()
     }
 
-    private func scanNode(_ output: ParseOutput) {
+    @Query.NodeActor
+    private static func scanNode(_ output: ParseOutput) {
         // This closure is called once for every item which is parsed by TrailerQL when it is
         // provided with the API response from the API endpoint. We'll see how to do that below.
         // Each call has a single parameter of type ParseOutput that reports on the progress of the
@@ -153,7 +156,9 @@ final class TrailerQLTests: XCTestCase {
             }
         }
 
-        let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false, perNode: scanNode)
+        let query = Query(name: "Rick And Morty", rootElement: schema, checkRate: false) {
+            TrailerQLTests.scanNode($0)
+        }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -187,7 +192,7 @@ final class TrailerQLTests: XCTestCase {
         //      }
         //  }
 
-        let queries = Query.batching("Rick And Morty", groupName: "charactersByIds", idList: ["1", "2", "3", "4", "5"], checkRate: false, perNode: scanNode) {
+        let queries = Query.batching("Rick And Morty", groupName: "charactersByIds", idList: ["1", "2", "3", "4", "5"], checkRate: false, perNode: { TrailerQLTests.scanNode($0) }) {
             Fragment(on: "Character") {
                 Field.id
                 Field("name")

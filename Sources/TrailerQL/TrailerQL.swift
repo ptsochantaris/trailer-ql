@@ -1,12 +1,12 @@
 import Foundation
-import Lista
+@preconcurrency import Lista
 
-typealias JSON = [String: Any]
+typealias JSON = [String: Sendable]
 
 public enum TQL {
     public static let emptyList = Lista<Fragment>()
 
-    public static var debugLog: ((String) -> Void)?
+    public nonisolated(unsafe) static var debugLog: ((String) -> Void)?
 
     static func log(_ message: @autoclosure () -> String) {
         if let debugLog {
