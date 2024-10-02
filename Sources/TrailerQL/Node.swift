@@ -34,7 +34,7 @@ public final class Node: Hashable, Sendable {
         self.flags = flags
     }
 
-    func withFlags(_ newFlags: Int) -> Node {
+    public func withFlags(_ newFlags: Int) -> Node {
         .init(id: id, elementType: elementType, jsonPayload: jsonPayload, parent: parent, relationship: relationship, flags: newFlags)
     }
 
