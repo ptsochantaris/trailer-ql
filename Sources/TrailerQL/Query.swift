@@ -1,7 +1,7 @@
 import Foundation
 import Lista
 
-public struct Query {
+public struct Query: Sendable {
     @globalActor
     public enum NodeActor {
         public actor ActorType {}
