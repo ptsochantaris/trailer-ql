@@ -1,5 +1,5 @@
 import Foundation
-@preconcurrency import Lista
+import Lista
 
 typealias JSON = [String: Sendable]
 

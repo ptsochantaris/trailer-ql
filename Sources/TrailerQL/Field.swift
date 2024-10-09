@@ -1,5 +1,5 @@
 import Foundation
-@preconcurrency import Lista
+import Lista
 
 public struct Field: Element {
     public static let id = Field("id")

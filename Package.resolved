@@ -1,4 +1,5 @@
 {
+  "originHash" : "c20b05d793e703f7015050844fb3a0b233bad68d39c85d40ecfe1566ef8c48df",
   "pins" : [
     {
       "identity" : "lista",
@@ -6,9 +7,9 @@
       "location" : "https://github.com/ptsochantaris/lista",
       "state" : {
         "branch" : "main",
-        "revision" : "7d6cf8bd6aea70c08a077083474ef94bfd1e1d57"
+        "revision" : "297f7db11e74e445d9fbb86245a0a3a22c0e9476"
       }
     }
   ],
-  "version" : 2
+  "version" : 3
 }
