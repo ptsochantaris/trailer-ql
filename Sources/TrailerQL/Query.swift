@@ -97,7 +97,15 @@ public struct Query: Sendable {
 
     public func processResponse(from data: Data) async throws(TQL.Error) -> Lista<Query> {
         guard
-            let json = try? data.asTypedJson(),
+            let json = try? data.asTypedJson() else {
+            let msg = "Could not parse JSON from data"
+            throw TQL.Error.apiError("\(logPrefix)" + msg)
+        }
+        return try await processResponse(from: json)
+    }
+
+    public func processResponse(from json: TypedJson.Entry) async throws(TQL.Error) -> Lista<Query> {
+        guard
             let allData = json.potentialObject(named: "data"),
             let data = (parent == nil) ? allData : allData.potentialObject(named: "node"),
             let topData = try? data[rootElement.name]
