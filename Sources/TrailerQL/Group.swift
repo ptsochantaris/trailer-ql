@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 
 public struct Group: Scanning {
     public enum Paging: Sendable {
@@ -137,7 +138,7 @@ public struct Group: Scanning {
         return res
     }
 
-    private func scanNode(_ node: JSON, query: Query, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
+    private func scanNode(_ node: TypedJson.Entry, query: Query, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws(TQL.Error) {
         let resolvedParent: Node?
 
         if let o = Node(jsonPayload: node, parent: parent, relationship: relationship) {
@@ -154,21 +155,21 @@ public struct Group: Scanning {
                 if scannable is Fragment {
                     try await scannable.scan(query: query, pageData: node, parent: resolvedParent, relationship: field.name, extraQueries: extraQueries)
 
-                } else if let fieldData = node[scannable.name] {
+                } else if let fieldData = node.potentialObject(named: scannable.name) {
                     try await scannable.scan(query: query, pageData: fieldData, parent: resolvedParent, relationship: field.name, extraQueries: extraQueries)
                 }
             }
         }
     }
 
-    private func scanEdges(_ edges: [JSON], pageInfo: JSON?, query: Query, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
+    private func scanEdges(_ edges: [TypedJson.Entry], pageInfo: TypedJson.Entry?, query: Query, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws(TQL.Error) {
         do {
-            for node in edges.compactMap({ $0["node"] as? JSON }) {
+            for node in edges.compactMap({ $0.potentialObject(named: "node") }) {
                 try await scanNode(node, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
             }
 
-            if let latestCursor = edges.last?["cursor"] as? String,
-               let pageInfo, pageInfo["hasNextPage"] as? Bool == true,
+            if let latestCursor = edges.last?.potentialString(named: "cursor"),
+               let pageInfo, pageInfo.potentialBool(named: "hasNextPage") == true,
                let parentId = parent?.id {
                 let newGroup = Group(cloning: self, lastCursor: latestCursor)
                 if let shellRootElement = query.rootElement.asShell(for: newGroup, batchRootId: parentId) as? Scanning {
@@ -181,7 +182,7 @@ public struct Group: Scanning {
         }
     }
 
-    private func scanList(nodes: [JSON], query: Query, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
+    private func scanList(nodes: [TypedJson.Entry], query: Query, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws(TQL.Error) {
         do {
             for node in nodes {
                 try await scanNode(node, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
@@ -191,20 +192,20 @@ public struct Group: Scanning {
         }
     }
 
-    public func scan(query: Query, pageData: Any, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
-        if let hash = pageData as? JSON {
-            if let edges = hash["edges"] as? [JSON] {
-                try await scanEdges(edges, pageInfo: hash["pageInfo"] as? JSON, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
+    public func scan(query: Query, pageData: TypedJson.Entry, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws(TQL.Error) {
+        if let nodes = pageData.potentialArray {
+            try await scanList(nodes: nodes, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
+
+        } else {
+            if let edges = pageData.potentialArray(named: "edges") {
+                try await scanEdges(edges, pageInfo: pageData.potentialObject(named: "pageInfo"), query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
             } else {
                 do {
-                    try await scanNode(hash, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
+                    try await scanNode(pageData, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
                 } catch TQL.Error.alreadyParsed {
                     // not a new node, ignore
                 }
             }
-
-        } else if let nodes = pageData as? [JSON] {
-            try await scanList(nodes: nodes, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
         }
         if extraQueries.count > 0 {
             TQL.log("\(query.logPrefix)(Group: \(name)) will need further paging: \(extraQueries.count) new queries")

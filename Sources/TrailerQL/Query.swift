@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 
 public struct Query: Sendable {
     @globalActor
@@ -8,7 +9,7 @@ public struct Query: Sendable {
         public static let shared = ActorType()
     }
 
-    public typealias PerNodeBlock = @NodeActor (ParseOutput) async throws -> Void
+    public typealias PerNodeBlock = @NodeActor (ParseOutput) async throws(TQL.Error) -> Void
 
     public let name: String
 
@@ -94,12 +95,12 @@ public struct Query: Sendable {
         rootElement.nodeCost
     }
 
-    public func processResponse(from json: Any?) async throws -> Lista<Query> {
+    public func processResponse(from data: Data) async throws(TQL.Error) -> Lista<Query> {
         guard
-            let json = json as? JSON,
-            let allData = json["data"] as? JSON,
-            let data = (parent == nil) ? allData : allData["node"] as? JSON,
-            let topData = data[rootElement.name]
+            let json = try? data.asTypedJson(),
+            let allData = json.potentialObject(named: "data"),
+            let data = (parent == nil) ? allData : allData.potentialObject(named: "node"),
+            let topData = try? data[rootElement.name]
         else {
             if allowsEmptyResponse {
                 return Lista()

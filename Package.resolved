@@ -1,5 +1,5 @@
 {
-  "originHash" : "c20b05d793e703f7015050844fb3a0b233bad68d39c85d40ecfe1566ef8c48df",
+  "originHash" : "3c1186ed03505351fd66abeb8ce6cd97ca77ce1298f7b74c7cc72fb805ad9148",
   "pins" : [
     {
       "identity" : "lista",
@@ -8,6 +8,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "c11f05c3ba6c56c1eecb09663815408d3b11771a"
+      }
+    },
+    {
+      "identity" : "trailer-json",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ptsochantaris/trailer-json",
+      "state" : {
+        "branch" : "main",
+        "revision" : "1fecc2492868672d4d52e1550ec36f89dc725aae"
       }
     }
   ],

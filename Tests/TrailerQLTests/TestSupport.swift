@@ -16,8 +16,8 @@ final class Character {
     var location: Location?
 
     init?(from node: Node) {
-        guard let name = node.jsonPayload["name"] as? String,
-              let status = node.jsonPayload["status"] as? String
+        guard let name = node.jsonPayload.potentialString(named: "name"),
+              let status = node.jsonPayload.potentialString(named: "status")
         else {
             return nil
         }
@@ -42,8 +42,8 @@ final class Location {
     let type: String
 
     init?(from node: Node) {
-        guard let name = node.jsonPayload["name"] as? String,
-              let type = node.jsonPayload["type"] as? String
+        guard let name = node.jsonPayload.potentialString(named: "name"),
+              let type = node.jsonPayload.potentialString(named: "type")
         else {
             return nil
         }

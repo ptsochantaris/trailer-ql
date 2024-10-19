@@ -1,5 +1,6 @@
 import Foundation
 import Lista
+import TrailerJson
 
 public struct BatchGroup: Scanning {
     public let id: UUID
@@ -49,13 +50,11 @@ public struct BatchGroup: Scanning {
         templateGroup.fragments
     }
 
-    public func scan(query: Query, pageData: Any, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws {
-        guard let nodes = pageData as? any Sequence else { return }
+    public func scan(query: Query, pageData: TypedJson.Entry, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws(TQL.Error) {
+        guard let nodes = pageData.potentialArray else { return }
 
-        for pageData in nodes {
-            if let jsonData = pageData as? JSON {
-                try await templateGroup.scan(query: query, pageData: jsonData, parent: parent, relationship: relationship, extraQueries: extraQueries)
-            }
+        for data in nodes {
+            try await templateGroup.scan(query: query, pageData: data, parent: parent, relationship: relationship, extraQueries: extraQueries)
         }
     }
 }

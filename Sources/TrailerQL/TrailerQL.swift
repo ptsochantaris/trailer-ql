@@ -1,8 +1,6 @@
 import Foundation
 import Lista
 
-typealias JSON = [String: Sendable]
-
 public enum TQL {
     public static let emptyList = Lista<Fragment>()
 

@@ -64,10 +64,9 @@ final class TrailerQLTests: XCTestCase {
 
         // Let's get and parse the response as a JSON object
         let result = try await URLSession.shared.data(for: request).0
-        let resultJson = try JSONSerialization.jsonObject(with: result)
 
         // And feed it into TrailerQL
-        _ = try await query.processResponse(from: resultJson)
+        _ = try await query.processResponse(from: result)
 
         // Sanity check that we did fetch stuff
         XCTAssertFalse(Character.all.isEmpty)
@@ -165,8 +164,7 @@ final class TrailerQLTests: XCTestCase {
         request.httpBody = try JSONSerialization.data(withJSONObject: ["query": query.queryText])
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let result = try await URLSession.shared.data(for: request).0
-        let resultJson = try JSONSerialization.jsonObject(with: result)
-        _ = try await query.processResponse(from: resultJson)
+        _ = try await query.processResponse(from: result)
 
         print("\nAnd here they are, all \(Character.all.count) of them!")
         for character in Character.all {
@@ -212,8 +210,7 @@ final class TrailerQLTests: XCTestCase {
         request.httpBody = try JSONSerialization.data(withJSONObject: ["query": firstQuery.queryText])
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         let result = try await URLSession.shared.data(for: request).0
-        let resultJson = try JSONSerialization.jsonObject(with: result)
-        _ = try await firstQuery.processResponse(from: resultJson)
+        _ = try await firstQuery.processResponse(from: result)
 
         print("\nAnd here they are, all \(Character.all.count) of them!")
         for character in Character.all {
