@@ -1,11 +1,19 @@
 import Foundation
 import Lista
 
+@globalActor
+public enum LogActor {
+    public final actor ActorType {}
+    public static let shared = ActorType()
+}
+
 public enum TQL {
     public static let emptyList = Lista<Fragment>()
 
-    public nonisolated(unsafe) static var debugLog: ((String) -> Void)?
+    @LogActor
+    public static var debugLog: ((String) -> Void)?
 
+    @LogActor
     static func log(_ message: @autoclosure () -> String) {
         if let debugLog {
             debugLog(message())

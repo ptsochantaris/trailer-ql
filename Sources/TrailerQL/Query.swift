@@ -117,7 +117,7 @@ public struct Query: Sendable {
             throw TQL.Error.apiError("\(logPrefix)" + msg)
         }
 
-        TQL.log("\(logPrefix)Scanning result")
+        await TQL.log("\(logPrefix)Scanning result")
 
         let extraQueries = Lista<Query>()
         try await rootElement.scan(query: self, pageData: topData, parent: parent, relationship: rootElement.name, extraQueries: extraQueries)
@@ -125,11 +125,11 @@ public struct Query: Sendable {
         try? await perNodeBlock?(.queryPageComplete)
 
         if extraQueries.count == 0 {
-            TQL.log("\(logPrefix)Parsed all pages")
+            await TQL.log("\(logPrefix)Parsed all pages")
             try? await perNodeBlock?(.queryComplete)
 
         } else {
-            TQL.log("\(logPrefix)Needs more page data (\(extraQueries.count) queries)")
+            await TQL.log("\(logPrefix)Needs more page data (\(extraQueries.count) queries)")
         }
         return extraQueries
     }

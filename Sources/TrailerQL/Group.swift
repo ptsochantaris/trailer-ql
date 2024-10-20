@@ -208,7 +208,7 @@ public struct Group: Scanning {
             }
         }
         if extraQueries.count > 0 {
-            TQL.log("\(query.logPrefix)(Group: \(name)) will need further paging: \(extraQueries.count) new queries")
+            await TQL.log("\(query.logPrefix)(Group: \(name)) will need further paging: \(extraQueries.count) new queries")
         }
     }
 }
