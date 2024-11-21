@@ -7,7 +7,7 @@
       "location" : "https://github.com/ptsochantaris/lista",
       "state" : {
         "branch" : "main",
-        "revision" : "c11f05c3ba6c56c1eecb09663815408d3b11771a"
+        "revision" : "588790a0bef7f4f6cdfcc8d072e37a4b0c5e2ba9"
       }
     },
     {
@@ -16,7 +16,7 @@
       "location" : "https://github.com/ptsochantaris/trailer-json",
       "state" : {
         "branch" : "main",
-        "revision" : "1fecc2492868672d4d52e1550ec36f89dc725aae"
+        "revision" : "87c0f9442759f561cbb1dbdc2abc9d095a946159"
       }
     }
   ],
