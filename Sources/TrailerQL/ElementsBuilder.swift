@@ -7,7 +7,7 @@ public enum ElementsBuilder {
     }
 
     public static func buildBlock(_ components: [Element]...) -> [Element] {
-        components.flatMap { $0 }
+        components.flatMap(\.self)
     }
 
     public static func buildArray(_ components: [Element]) -> [Element] {
@@ -15,7 +15,7 @@ public enum ElementsBuilder {
     }
 
     public static func buildArray(_ components: [[Element]]) -> [Element] {
-        components.flatMap { $0 }
+        components.flatMap(\.self)
     }
 
     public static func buildOptional(_ component: [Element]?) -> [Element] {

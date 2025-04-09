@@ -64,7 +64,7 @@ public struct Fragment: Scanning, Hashable {
         return Fragment(cloning: self, elements: currentElements)
     }
 
-    public func scan(query: Query, pageData: TypedJson.Entry, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws(TQL.Error) {
+    public func scan(query: Query, pageData: TypedJson.Entry, parent: Node?, relationship _: String?, extraQueries: Lista<Query>) async throws(TQL.Error) {
         // DLog("\(query.logPrefix)Scanning fragment \(name)")
 
         for element in elements {
