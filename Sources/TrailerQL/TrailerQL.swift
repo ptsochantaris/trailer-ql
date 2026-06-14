@@ -14,7 +14,7 @@ public enum TQL {
     public static var debugLog: ((String) -> Void)?
 
     @LogActor
-    static func log(_ message: @autoclosure () -> String) {
+    static func log(_ message: @autoclosure @Sendable () -> String) {
         if let debugLog {
             debugLog(message())
         }

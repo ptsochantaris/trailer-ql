@@ -1,13 +1,13 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.3
 
 import PackageDescription
 
 let package = Package(
     name: "TrailerQL",
     platforms: [
-        .macOS(.v11),
-        .iOS(.v14),
-        .watchOS(.v7)
+        .macOS(.v15),
+        .iOS(.v18),
+        .watchOS(.v11)
     ],
     products: [
         .library(
@@ -25,6 +25,9 @@ let package = Package(
             dependencies: [
                 .product(name: "Lista", package: "lista"),
                 .product(name: "TrailerJson", package: "trailer-json")
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault")
             ]
         ),
         .testTarget(

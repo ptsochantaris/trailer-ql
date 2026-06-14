@@ -2,7 +2,7 @@
 import XCTest
 
 final class TrailerQLTests: XCTestCase {
-    // Let's see where Rick and Morty currently are...
+    /// Let's see where Rick and Morty currently are...
     private let url = URL(string: "https://rickandmortyapi.com/graphql")!
 
     override func setUp() async throws {
@@ -203,7 +203,7 @@ final class TrailerQLTests: XCTestCase {
             }
         }
 
-        let firstQuery = queries.first!
+        let firstQuery = try XCTUnwrap(queries.first)
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

@@ -6,9 +6,14 @@ public struct Field: Element {
 
     public let id = UUID()
     public let name: String
-    public var queryText: String { name }
+    public var queryText: String {
+        name
+    }
+
     public let fragments = TQL.emptyList
-    public var nodeCost: Int { 0 }
+    public var nodeCost: Int {
+        0
+    }
 
     public init(_ name: String) {
         self.name = name

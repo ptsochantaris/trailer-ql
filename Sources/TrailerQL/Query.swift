@@ -95,6 +95,7 @@ public struct Query: Sendable {
         rootElement.nodeCost
     }
 
+    @NodeActor
     public func processResponse(from data: Data) async throws(TQL.Error) -> Lista<Query> {
         guard
             let json = try? data.asTypedJson() else {
@@ -104,6 +105,7 @@ public struct Query: Sendable {
         return try await processResponse(from: json)
     }
 
+    @NodeActor
     public func processResponse(from json: TypedJson.Entry) async throws(TQL.Error) -> Lista<Query> {
         guard
             let allData = json.potentialObject(named: "data"),

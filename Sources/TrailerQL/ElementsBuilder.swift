@@ -2,14 +2,6 @@ import Foundation
 
 @resultBuilder
 public enum ElementsBuilder {
-    public static func buildBlock(_ components: Element...) -> [Element] {
-        components
-    }
-
-    public static func buildBlock(_ components: [Element]...) -> [Element] {
-        components.flatMap(\.self)
-    }
-
     public static func buildArray(_ components: [Element]) -> [Element] {
         components
     }

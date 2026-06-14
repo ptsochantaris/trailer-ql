@@ -46,16 +46,34 @@ public struct Fragment: Scanning, Hashable {
 
     private init(cloning: Fragment, elements: [Element]) {
         id = cloning.id
-        name = cloning.name
         type = cloning.type
         self.elements = elements
+        name = Fragment.makeName(on: cloning.type, elements: elements)
     }
 
     public init(on type: String, @ElementsBuilder elements: () -> [Element]) {
         id = UUID()
-        name = type.lowercased() + "Fragment"
         self.type = type
         self.elements = elements()
+        name = Fragment.makeName(on: type, elements: self.elements)
+    }
+
+    // Derives a stable name from the fragment's type and contents, so that distinct
+    // fragments on the same type get distinct GraphQL names while identical ones de-dupe.
+    private static func makeName(on type: String, elements: [Element]) -> String {
+        var hash: UInt64 = 0xCBF2_9CE4_8422_2325
+        func mix(_ string: String) {
+            for byte in string.utf8 {
+                hash ^= UInt64(byte)
+                hash = hash &* 0x0000_0100_0000_01B3
+            }
+        }
+        mix(type)
+        for element in elements {
+            mix("\u{0}")
+            mix(element.queryText)
+        }
+        return type.lowercased() + "Fragment" + String(hash, radix: 16)
     }
 
     public func addingElement(_ element: Element) -> Fragment {

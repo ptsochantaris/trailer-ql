@@ -11,9 +11,8 @@ public final class Node: Hashable, Sendable {
     public let jsonPayload: TypedJson.Entry
     public let parent: Node?
     public let relationship: String?
-    public nonisolated(unsafe) var flags: Int
 
-    init?(jsonPayload: TypedJson.Entry, parent: Node?, relationship: String?, flags: Int = 0) {
+    init?(jsonPayload: TypedJson.Entry, parent: Node?, relationship: String?) {
         guard let id = jsonPayload.potentialString(named: "id"),
               let elementType = jsonPayload.potentialString(named: "__typename")
         else { return nil }
@@ -23,7 +22,6 @@ public final class Node: Hashable, Sendable {
         self.jsonPayload = jsonPayload
         self.parent = parent
         self.relationship = relationship
-        self.flags = flags
     }
 
     public func hash(into hasher: inout Hasher) {

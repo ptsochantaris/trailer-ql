@@ -2,7 +2,7 @@ import Foundation
 import Lista
 @testable import TrailerQL
 
-// Our, erm, heroes
+/// Our, erm, heroes
 final class Character {
     // Our minimalist database of characters :)
     static let all = Lista<Character>()
@@ -35,7 +35,7 @@ final class Character {
     }
 }
 
-// A record that holds their location
+/// A record that holds their location
 final class Location {
     let id: String
     let name: String
