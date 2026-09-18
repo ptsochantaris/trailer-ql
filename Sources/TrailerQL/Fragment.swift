@@ -59,7 +59,7 @@ public struct Fragment: Scanning, Hashable {
         self.id = id
         self.type = type
         self.elements = elements
-        scanTargets = ScanTarget.byName(in: elements)
+        scanTargets = ScanTarget.resolvingFragments(in: elements)
 
         // One pass over the element text serves both the name and the declaration.
         let parts = elements.map(\.queryText)
@@ -102,7 +102,12 @@ public struct Fragment: Scanning, Hashable {
         // DLog("\(query.logPrefix)Scanning fragment \(name)")
 
         for target in scanTargets {
-            if let elementData = pageData.potentialObject(named: target.name) {
+            if target.scansEnclosingPayload {
+                // A nested fragment is a spread: the server merges its fields into this same
+                // object, so there is no field named after it to descend into.
+                try await target.element.scan(query: query, pageData: pageData, parent: parent, relationship: target.name, extraQueries: extraQueries)
+
+            } else if let elementData = pageData.potentialObject(named: target.name) {
                 try await target.element.scan(query: query, pageData: elementData, parent: parent, relationship: target.name, extraQueries: extraQueries)
             }
         }

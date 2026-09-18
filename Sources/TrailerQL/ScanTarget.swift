@@ -14,27 +14,13 @@ struct ScanTarget: Sendable {
     /// against a field named after them.
     let scansEnclosingPayload: Bool
 
-    /// Resolves the scannable children of a group, honouring the fragment distinction above.
+    /// Resolves the scannable children of an element, honouring the fragment distinction above.
     static func resolvingFragments(in elements: [Element]) -> [ScanTarget] {
         elements.compactMap { element in
             guard let scannable = element as? Scanning else {
                 return nil
             }
             return ScanTarget(element: scannable, name: element.name, scansEnclosingPayload: scannable is Fragment)
-        }
-    }
-
-    /// Resolves the scannable children of a fragment, all of which are looked up by name.
-    ///
-    /// Note that this means a fragment nested directly inside another fragment is not scanned, since
-    /// no payload carries a field named after a generated fragment name. Groups are what nest in
-    /// practice, so this preserves existing behaviour rather than quietly changing it.
-    static func byName(in elements: [Element]) -> [ScanTarget] {
-        elements.compactMap { element in
-            guard let scannable = element as? Scanning else {
-                return nil
-            }
-            return ScanTarget(element: scannable, name: element.name, scansEnclosingPayload: false)
         }
     }
 }
