@@ -15,23 +15,66 @@ public struct Group: Scanning {
     let paging: Paging
     private let extraParams: [Param]
     private let lastCursor: String?
+    private let scanTargets: [ScanTarget]
+
+    /// The field list as query text, without the leading `__typename`. Everything this depends on
+    /// is fixed at construction, and generating it walks the whole subtree, so it is built once
+    /// here instead of on every access.
+    let fieldsQueryText: String
+    public let queryText: String
+
+    /// Every fragment in this subtree, flattened at construction for the same reason: collecting
+    /// them on demand meant walking the tree and allocating a list at each node it passed.
+    private let allFragments: [Fragment]
 
     public init(_ name: String, _ params: Param..., paging: Paging = .none, @ElementsBuilder fields: () -> [Element]) {
         id = UUID()
         self.name = name
-        self.fields = fields()
+        let fields = fields()
+        self.fields = fields
         self.paging = paging
         extraParams = params
         lastCursor = nil
+        scanTargets = ScanTarget.resolvingFragments(in: fields)
+        fieldsQueryText = Group.makeFieldsQueryText(fields)
+        queryText = Group.makeQueryText(name: name, paging: paging, extraParams: params, lastCursor: nil, fieldsQueryText: fieldsQueryText)
+        allFragments = Group.collectFragments(in: fields)
     }
 
     private init(cloning group: Group, name: String? = nil, lastCursor: String? = nil, replacedFields: [Element]? = nil) {
         id = group.id
-        self.name = name ?? group.name
-        fields = replacedFields ?? group.fields
+        let name = name ?? group.name
+        self.name = name
+        let fields = replacedFields ?? group.fields
+        self.fields = fields
         paging = group.paging
         extraParams = group.extraParams
         self.lastCursor = lastCursor
+
+        if let replacedFields {
+            scanTargets = ScanTarget.resolvingFragments(in: replacedFields)
+            fieldsQueryText = Group.makeFieldsQueryText(replacedFields)
+            allFragments = Group.collectFragments(in: replacedFields)
+        } else {
+            scanTargets = group.scanTargets
+            fieldsQueryText = group.fieldsQueryText
+            allFragments = group.allFragments
+        }
+        queryText = Group.makeQueryText(name: name, paging: group.paging, extraParams: group.extraParams, lastCursor: lastCursor, fieldsQueryText: fieldsQueryText)
+    }
+
+    private static func makeFieldsQueryText(_ fields: [Element]) -> String {
+        // Materialised first because `queryText` is computed for some element kinds, so asking for
+        // it once per field is cheaper than asking again while sizing the buffer.
+        fields.map(\.queryText).assembled()
+    }
+
+    private static func collectFragments(in fields: [Element]) -> [Fragment] {
+        var result = [Fragment]()
+        for field in fields {
+            result.append(contentsOf: field.fragments)
+        }
+        return result
     }
 
     public func asShell(for element: Element, batchRootId _: String?) -> Element? {
@@ -73,8 +116,9 @@ public struct Group: Scanning {
         case item, list, pagedList
     }
 
-    public var queryText: String {
-        let brackets = Lista<String>()
+    private static func makeQueryText(name: String, paging: Paging, extraParams: [Param], lastCursor: String?, fieldsQueryText: String) -> String {
+        var brackets = [String]()
+        brackets.reserveCapacity(extraParams.count + 2)
         let format: QueryFormat
 
         switch paging {
@@ -112,29 +156,40 @@ public struct Group: Scanning {
             }
         }
 
-        let query: String = if brackets.count > 0 {
-            name + "(" + brackets.joined(separator: ", ") + ")"
-        } else {
+        let query: String = if brackets.isEmpty {
             name
+        } else {
+            brackets.assembled(separator: ", ", prefix: "\(name)(", suffix: ")")
         }
 
-        let fieldsText = "__typename " + fields.map(\.queryText).joined(separator: " ")
-
+        // The `__typename` prefix is part of the opening text rather than being concatenated onto
+        // the field list, so the field list is copied once instead of twice.
+        let opening: String
+        let closing: String
         switch format {
         case .item:
-            return query + " { " + fieldsText + " }"
+            opening = " { __typename "
+            closing = " }"
         case .list:
-            return query + " { edges { node { " + fieldsText + " } } }"
+            opening = " { edges { node { __typename "
+            closing = " } } }"
         case .pagedList:
-            return query + " { edges { node { " + fieldsText + " } cursor } pageInfo { hasNextPage } }"
+            opening = " { edges { node { __typename "
+            closing = " } cursor } pageInfo { hasNextPage } }"
         }
+
+        var text = String()
+        text.reserveCapacity(query.utf8.count + opening.utf8.count + fieldsQueryText.utf8.count + closing.utf8.count)
+        text += query
+        text += opening
+        text += fieldsQueryText
+        text += closing
+        return text
     }
 
     public var fragments: Lista<Fragment> {
         let res = Lista<Fragment>()
-        for field in fields {
-            res.append(contentsOf: field.fragments)
-        }
+        res.append(from: allFragments)
         return res
     }
 
@@ -150,21 +205,22 @@ public struct Group: Scanning {
             resolvedParent = parent
         }
 
-        for field in fields {
-            if let scannable = field as? Scanning {
-                if scannable is Fragment {
-                    try await scannable.scan(query: query, pageData: node, parent: resolvedParent, relationship: field.name, extraQueries: extraQueries)
+        for target in scanTargets {
+            if target.scansEnclosingPayload {
+                try await target.element.scan(query: query, pageData: node, parent: resolvedParent, relationship: target.name, extraQueries: extraQueries)
 
-                } else if let fieldData = node.potentialObject(named: scannable.name) {
-                    try await scannable.scan(query: query, pageData: fieldData, parent: resolvedParent, relationship: field.name, extraQueries: extraQueries)
-                }
+            } else if let fieldData = node.potentialObject(named: target.name) {
+                try await target.element.scan(query: query, pageData: fieldData, parent: resolvedParent, relationship: target.name, extraQueries: extraQueries)
             }
         }
     }
 
     private func scanEdges(_ edges: [TypedJson.Entry], pageInfo: TypedJson.Entry?, query: Query, parent: Node?, relationship: String?, extraQueries: Lista<Query>) async throws(TQL.Error) {
         do {
-            for node in edges.compactMap({ $0.potentialObject(named: "node") }) {
+            for edge in edges {
+                guard let node = edge.potentialObject(named: "node") else {
+                    continue
+                }
                 try await scanNode(node, query: query, parent: parent, relationship: relationship, extraQueries: extraQueries)
             }
 
@@ -175,6 +231,7 @@ public struct Group: Scanning {
                 if let shellRootElement = query.rootElement.asShell(for: newGroup, batchRootId: parentId) as? Scanning {
                     let nextPage = Query(from: query, with: shellRootElement)
                     extraQueries.append(nextPage)
+                    await TQL.log("\(query.logPrefix)(Group: \(name)) will need paging for parent \(parentId)")
                 }
             }
         } catch TQL.Error.alreadyParsed {
@@ -206,9 +263,6 @@ public struct Group: Scanning {
                     // not a new node, ignore
                 }
             }
-        }
-        if extraQueries.count > 0 {
-            await TQL.log("\(query.logPrefix)(Group: \(name)) will need further paging: \(extraQueries.count) new queries")
         }
     }
 }

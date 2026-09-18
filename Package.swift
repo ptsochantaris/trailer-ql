@@ -33,6 +33,17 @@ let package = Package(
         .testTarget(
             name: "TrailerQLTests",
             dependencies: ["TrailerQL"]
+        ),
+        .executableTarget(
+            name: "Benchmark",
+            dependencies: [
+                "TrailerQL",
+                .product(name: "TrailerJson", package: "trailer-json")
+            ],
+            resources: [.copy("issueList.json")],
+            swiftSettings: [
+                .enableUpcomingFeature("NonisolatedNonsendingByDefault")
+            ]
         )
     ]
 )

@@ -1,5 +1,5 @@
 {
-  "originHash" : "3c1186ed03505351fd66abeb8ce6cd97ca77ce1298f7b74c7cc72fb805ad9148",
+  "originHash" : "44563c1a3d2abfb637887a6b233c8b96472db0d02b6c38ed4ada19c7dd677522",
   "pins" : [
     {
       "identity" : "lista",
@@ -7,7 +7,7 @@
       "location" : "https://github.com/ptsochantaris/lista",
       "state" : {
         "branch" : "main",
-        "revision" : "56e6a46113f48e5db6b76997ec2c828f14df52d7"
+        "revision" : "07b756354cdcc55fbb207bc08f6c4b782eb0419d"
       }
     },
     {
@@ -16,7 +16,7 @@
       "location" : "https://github.com/ptsochantaris/trailer-json",
       "state" : {
         "branch" : "main",
-        "revision" : "6c651dad8f258d3b8d9d19000d32f9ca172bf1f7"
+        "revision" : "541648434ad1417d76a54bf10f5e08e65ad74347"
       }
     }
   ],

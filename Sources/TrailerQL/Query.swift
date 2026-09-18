@@ -66,16 +66,30 @@ public struct Query: Sendable {
     }
 
     private var rootQueryText: String {
-        if let parent {
-            "node(id: \"\(parent.id)\") { ... on \(parent.elementType) { " + rootElement.queryText + " } }"
-        } else {
-            rootElement.queryText
+        let inner = rootElement.queryText
+        guard let parent else {
+            return inner
         }
+
+        let opening = "node(id: \"\(parent.id)\") { ... on \(parent.elementType) { "
+        var text = String()
+        text.reserveCapacity(opening.utf8.count + inner.utf8.count + 4)
+        text += opening
+        text += inner
+        text += " } }"
+        return text
     }
 
     private var fragmentQueryText: String {
-        let fragments = Set(rootElement.fragments)
-        return fragments.map(\.declaration).joined(separator: " ")
+        // De-duplicated in the order the fragments are encountered. Collecting them into a `Set`
+        // instead left the declarations in that set's iteration order, which is not stable even
+        // within a single process, so the same query could produce different text each time.
+        var seenNames = Set<String>()
+        var declarations = [String]()
+        for fragment in rootElement.fragments where seenNames.insert(fragment.name).inserted {
+            declarations.append(fragment.declaration)
+        }
+        return declarations.assembled()
     }
 
     public var queryText: String {
@@ -84,7 +98,18 @@ public struct Query: Sendable {
         } else {
             " }"
         }
-        return fragmentQueryText + " { " + rootQueryText + suffix
+
+        // Both of these run to kilobytes, so they are appended into one sized buffer rather than
+        // concatenated, which would copy the accumulating text at every step.
+        let fragments = fragmentQueryText
+        let root = rootQueryText
+        var text = String()
+        text.reserveCapacity(fragments.utf8.count + root.utf8.count + suffix.utf8.count + 3)
+        text += fragments
+        text += " { "
+        text += root
+        text += suffix
+        return text
     }
 
     public var logPrefix: String {
